@@ -18,15 +18,24 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.tetanggaku.R
+import com.example.tetanggaku.presentation.viewmodels.AuthViewModel
 
 @Composable
 fun AuthScreen(
     onLoggedIn: () -> Unit,
-    onGoToRegister: () -> Unit
+    onGoToRegister: () -> Unit,
+    viewModel: AuthViewModel = viewModel()
 ) {
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
+    val uiState by viewModel.uiState.collectAsState()
+    
+    // Handle navigation saat login berhasil
+    LaunchedEffect(uiState.isLoggedIn) {
+        if (uiState.isLoggedIn) {
+            onLoggedIn()
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -62,36 +71,69 @@ fun AuthScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Error message
+            if (uiState.errorMessage != null) {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 12.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color(0xFFFFEBEE)
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = uiState.errorMessage ?: "",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color(0xFFC62828),
+                            modifier = Modifier.weight(1f)
+                        )
+                        Text(
+                            text = "✕",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color(0xFFC62828),
+                            modifier = Modifier
+                                .clickable { viewModel.clearError() }
+                                .padding(start = 8.dp)
+                        )
+                    }
+                }
+            }
+
             // Form email
             OutlinedTextField(
-                value = email,
-                onValueChange = { email = it },
+                value = uiState.email,
+                onValueChange = { viewModel.onEmailChange(it) },
                 label = { Text("Email") },
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+                singleLine = true,
+                enabled = !uiState.isLoading
             )
 
             Spacer(modifier = Modifier.height(12.dp))
 
             // Form password
             OutlinedTextField(
-                value = password,
-                onValueChange = { password = it },
+                value = uiState.password,
+                onValueChange = { viewModel.onPasswordChange(it) },
                 label = { Text("Password") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                visualTransformation = PasswordVisualTransformation()
+                visualTransformation = PasswordVisualTransformation(),
+                enabled = !uiState.isLoading
             )
 
             Spacer(modifier = Modifier.height(20.dp))
 
             // Tombol Sign in
             Button(
-                onClick = {
-                    if (email.isNotBlank() && password.isNotBlank()) {
-                        onLoggedIn()
-                    }
-                },
+                onClick = { viewModel.login() },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp),
@@ -99,13 +141,22 @@ fun AuthScreen(
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF1E40AF),
                     contentColor = Color.White
-                )
+                ),
+                enabled = !uiState.isLoading
             ) {
-                Text(
-                    text = "Sign in",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
+                if (uiState.isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = Color.White,
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Text(
+                        text = "Sign in",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -139,15 +190,21 @@ fun AuthScreen(
             ) {
                 SocialCircleButton(
                     iconRes = R.drawable.logo_google,
-                    contentDescription = "Sign in with Google"
+                    contentDescription = "Sign in with Google",
+                    onClick = { viewModel.loginWithSocial("Google") },
+                    enabled = !uiState.isLoading
                 )
                 SocialCircleButton(
                     iconRes = R.drawable.logo_facebook,
-                    contentDescription = "Sign in with Facebook"
+                    contentDescription = "Sign in with Facebook",
+                    onClick = { viewModel.loginWithSocial("Facebook") },
+                    enabled = !uiState.isLoading
                 )
                 SocialCircleButton(
                     iconRes = R.drawable.logo_twitter,
-                    contentDescription = "Sign in with Twitter"
+                    contentDescription = "Sign in with Twitter",
+                    onClick = { viewModel.loginWithSocial("Twitter") },
+                    enabled = !uiState.isLoading
                 )
             }
 
@@ -179,15 +236,16 @@ fun AuthScreen(
 fun SocialCircleButton(
     iconRes: Int,
     contentDescription: String,
-    onClick: () -> Unit = {}
+    onClick: () -> Unit = {},
+    enabled: Boolean = true
 ) {
     Surface(
         modifier = Modifier
             .size(48.dp)
             .clip(CircleShape)
-            .clickable { onClick() },
-        color = Color(0xFFF5F6FB),
-        shadowElevation = 4.dp,
+            .clickable(enabled = enabled) { onClick() },
+        color = if (enabled) Color(0xFFF5F6FB) else Color(0xFFE0E0E0),
+        shadowElevation = if (enabled) 4.dp else 0.dp,
         shape = CircleShape
     ) {
         Box(
@@ -197,7 +255,8 @@ fun SocialCircleButton(
             Image(
                 painter = painterResource(id = iconRes),
                 contentDescription = contentDescription,
-                modifier = Modifier.size(26.dp)
+                modifier = Modifier.size(26.dp),
+                alpha = if (enabled) 1f else 0.5f
             )
         }
     }

@@ -29,6 +29,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -41,29 +43,25 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.tetanggaku.ui.theme.TetanggakuTheme
 import com.example.tetanggaku.R
+import com.example.tetanggaku.presentation.viewmodels.ProfileViewModel
 
 @Composable
 fun ProfileScreen(
     onHomeClick: () -> Unit,
     onJobClick: () -> Unit = {},
     onLogout: () -> Unit = {},
-    userName: String = "Udinxyz",
-    userEmail: String = "udinxyz@example.com",
-    totalJobsCompleted: Int = 12,
-    neighborRating: Double = 4.8,
-    level: Int = 3,
-    currentXp: Int = 1250,
-    nextLevelXp: Int = 2000,
     onMyProfileClick: () -> Unit = {},
     onMessagesClick: () -> Unit = {},
     onSettingsClick: () -> Unit = {},
-    onTermsClick: () -> Unit = {}
+    onTermsClick: () -> Unit = {},
+    viewModel: ProfileViewModel = viewModel()
 ) {
+    val uiState by viewModel.uiState.collectAsState()
     val selectedTabState = remember { mutableStateOf(HomeTab.PROFIL) }
-    val xpProgress =
-        (currentXp.toFloat() / nextLevelXp.toFloat()).coerceIn(0f, 1f)
+    val xpProgress = viewModel.getXpProgress()
 
     Box(
         modifier = Modifier
@@ -158,7 +156,7 @@ fun ProfileScreen(
 
                     // Nama & email diberi padding horizontal biar tidak kepotong
                     Text(
-                        text = userName.uppercase(),
+                        text = uiState.userName.uppercase(),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
                         maxLines = 1,
@@ -168,7 +166,7 @@ fun ProfileScreen(
                     )
 
                     Text(
-                        text = userEmail,
+                        text = uiState.userEmail,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
@@ -186,11 +184,11 @@ fun ProfileScreen(
                     ) {
                         StatChip(
                             label = "Jobs selesai",
-                            value = "$totalJobsCompleted"
+                            value = "${uiState.totalJobsCompleted}"
                         )
                         StatChip(
                             label = "Rating tetangga",
-                            value = "%.1f★".format(neighborRating)
+                            value = "%.1f★".format(uiState.neighborRating)
                         )
                     }
 
@@ -228,12 +226,12 @@ fun ProfileScreen(
                             ) {
                                 Column {
                                     Text(
-                                        text = "Level $level",
+                                        text = "Level ${uiState.level}",
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 16.sp
                                     )
                                     Text(
-                                        text = "$currentXp / $nextLevelXp XP",
+                                        text = "${uiState.currentXp} / ${uiState.nextLevelXp} XP",
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
@@ -244,7 +242,7 @@ fun ProfileScreen(
                                     color = Color(0xFFEEF2FF)
                                 ) {
                                     Text(
-                                        text = "Badge: Tetangga Aktif",
+                                        text = "Badge: ${uiState.badge}",
                                         color = Color(0xFF4F46E5),
                                         fontSize = 11.sp,
                                         fontWeight = FontWeight.SemiBold,
@@ -269,7 +267,7 @@ fun ProfileScreen(
                             Spacer(modifier = Modifier.height(6.dp))
 
                             Text(
-                                text = "Selesaikan lebih banyak job untuk naik ke Level ${level + 1}.",
+                                text = "Selesaikan lebih banyak job untuk naik ke Level ${uiState.level + 1}.",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -308,8 +306,11 @@ fun ProfileScreen(
                         icon = Icons.Filled.Email,
                         iconTint = Color(0xFF3B82F6),
                         title = "Messages",
-                        badgeCount = 2,
-                        onClick = onMessagesClick
+                        badgeCount = uiState.unreadMessages,
+                        onClick = {
+                            viewModel.markMessagesAsRead()
+                            onMessagesClick()
+                        }
                     )
 
                     Divider(color = Color(0xFFE5E7EB))
