@@ -1,0 +1,24 @@
+package com.example.tetanggaku.presentation.viewmodels
+
+data class JobDetailUiState(
+    val jobId: String = "",
+    val title: String = "Bantu angkat lemari ke lantai 2",
+    val category: String = "Angkut",
+    val price: String = "Rp50.000",
+    val duration: String = "Perkiraan durasi 1–2 jam",
+    val status: String = "Tersedia",
+    val helpersNeeded: String = "1–2 orang",
+    val time: String = "Hari ini, 16.00 – 17.00",
+    val location: String = "Komplek Melati, Blok C, Rumah 12",
+    val description: String = "Lemari kayu cukup berat, butuh 2 orang bantu angkat dari lantai dasar ke lantai 2.",
+    val requirements: String = "• Jumlah penolong: 2 orang\n• Perkiraan berat: ±50–60 kg",
+    val requesterName: String = "Mbak Sari",
+    val requesterRating: Double = 4.9,
+    val requesterJobsCount: Int = 8,
+    val requesterInitial: String = "S",
+    val isVerified: Boolean = true,
+    val xpReward: Int = 50,
+    val isLoading: Boolean = false,
+    val errorMessage: String? = null,
+    val isJobTaken: Boolean = false
+)

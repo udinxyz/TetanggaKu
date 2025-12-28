@@ -20,6 +20,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -27,12 +30,30 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.tetanggaku.presentation.viewmodels.JobDetailViewModel
 
 @Composable
 fun JobDetailScreen(
     onBack: () -> Unit,
-    onTakeJob: () -> Unit = {}
+    onTakeJob: () -> Unit = {},
+    jobId: String = "1",
+    viewModel: JobDetailViewModel = viewModel()
 ) {
+    val uiState by viewModel.uiState.collectAsState()
+    
+    // Load job detail saat screen dibuka
+    LaunchedEffect(jobId) {
+        viewModel.loadJobDetail(jobId)
+    }
+    
+    // Navigate back saat job berhasil diambil
+    LaunchedEffect(uiState.isJobTaken) {
+        if (uiState.isJobTaken) {
+            onTakeJob()
+        }
+    }
+    
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -84,7 +105,7 @@ fun JobDetailScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Angkut",
+                            text = uiState.category,
                             color = Color(0xFF6366F1),
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 12.sp
@@ -95,7 +116,7 @@ fun JobDetailScreen(
                             color = Color(0xFF22C55E).copy(alpha = 0.12f)
                         ) {
                             Text(
-                                text = "Tersedia",
+                                text = uiState.status,
                                 color = Color(0xFF16A34A),
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.SemiBold,
@@ -108,7 +129,7 @@ fun JobDetailScreen(
                     Spacer(modifier = Modifier.height(8.dp))
 
                     Text(
-                        text = "Bantu angkat lemari ke lantai 2",
+                        text = uiState.title,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 18.sp
@@ -117,7 +138,7 @@ fun JobDetailScreen(
                     Spacer(modifier = Modifier.height(8.dp))
 
                     Text(
-                        text = "Rp50.000",
+                        text = uiState.price,
                         fontWeight = FontWeight.Bold,
                         fontSize = 18.sp
                     )
@@ -125,7 +146,7 @@ fun JobDetailScreen(
                     Spacer(modifier = Modifier.height(4.dp))
 
                     Text(
-                        text = "Perkiraan durasi 1–2 jam",
+                        text = uiState.duration,
                         style = MaterialTheme.typography.bodySmall,
                         color = Color(0xFF6B7280)
                     )
@@ -143,7 +164,7 @@ fun JobDetailScreen(
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = "Job ringan, cocok untuk 1–2 orang.",
+                            text = "Job ringan, cocok untuk ${uiState.helpersNeeded}.",
                             style = MaterialTheme.typography.bodySmall,
                             color = Color(0xFF6B7280)
                         )
@@ -180,7 +201,7 @@ fun JobDetailScreen(
                                 fontSize = 13.sp
                             )
                             Text(
-                                text = "Hari ini, 16.00 – 17.00",
+                                text = uiState.time,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = Color(0xFF6B7280)
                             )
@@ -204,7 +225,7 @@ fun JobDetailScreen(
                                 fontSize = 13.sp
                             )
                             Text(
-                                text = "Komplek Melati, Blok C, Rumah 12",
+                                text = uiState.location,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = Color(0xFF6B7280)
                             )
@@ -228,7 +249,7 @@ fun JobDetailScreen(
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 Text(
-                    text = "Lemari kayu cukup berat, butuh 2 orang bantu angkat dari lantai dasar ke lantai 2. Tolong hati-hati saat mengangkat dan pastikan menggunakan sandal atau sepatu. Peminta bantuan akan membantu mengarahkan posisi lemari.",
+                    text = uiState.description,
                     style = MaterialTheme.typography.bodySmall,
                     color = Color(0xFF4B5563)
                 )
@@ -242,10 +263,7 @@ fun JobDetailScreen(
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "• Jumlah penolong: 2 orang\n" +
-                            "• Perkiraan berat: ±50–60 kg\n" +
-                            "• Peralatan: tali pengikat disediakan peminta\n" +
-                            "• Catatan: mohon datang tepat waktu dan konfirmasi lewat chat.",
+                    text = uiState.requirements,
                     style = MaterialTheme.typography.bodySmall,
                     color = Color(0xFF4B5563)
                 )
@@ -277,7 +295,7 @@ fun JobDetailScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "S",
+                            text = uiState.requesterInitial,
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFF1D4ED8)
                         )
@@ -289,7 +307,7 @@ fun JobDetailScreen(
                         modifier = Modifier.weight(1f)
                     ) {
                         Text(
-                            text = "Mbak Sari",
+                            text = uiState.requesterName,
                             fontWeight = FontWeight.SemiBold
                         )
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -301,7 +319,7 @@ fun JobDetailScreen(
                             )
                             Spacer(modifier = Modifier.width(2.dp))
                             Text(
-                                text = "4.9 • 8 job dibuat",
+                                text = "${uiState.requesterRating} • ${uiState.requesterJobsCount} job dibuat",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = Color(0xFF6B7280)
                             )
@@ -335,7 +353,7 @@ fun JobDetailScreen(
                     .padding(horizontal = 20.dp)
             ) {
                 Text(
-                    text = "+50 XP jika kamu menyelesaikan job ini.",
+                    text = "+${uiState.xpReward} XP jika kamu menyelesaikan job ini.",
                     style = MaterialTheme.typography.bodySmall,
                     color = Color(0xFF16A34A),
                     fontWeight = FontWeight.SemiBold
@@ -374,7 +392,7 @@ fun JobDetailScreen(
                         color = Color(0xFF6B7280)
                     )
                     Text(
-                        text = "Rp50.000",
+                        text = uiState.price,
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp
                     )
@@ -386,7 +404,7 @@ fun JobDetailScreen(
                         .clip(RoundedCornerShape(999.dp))
                         .background(Color(0xFF6366F1))
                         .padding(vertical = 10.dp)
-                        .clickable { onTakeJob() },
+                        .clickable { viewModel.takeJob() },
                     contentAlignment = Alignment.Center
                 ) {
                     Text(

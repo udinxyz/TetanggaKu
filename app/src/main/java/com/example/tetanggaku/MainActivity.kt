@@ -9,13 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.tetanggaku.presentation.screens.AuthScreen
-import com.example.tetanggaku.presentation.screens.CreateJobScreen
-import com.example.tetanggaku.presentation.screens.HomeScreen
-import com.example.tetanggaku.presentation.screens.JobDetailScreen
-import com.example.tetanggaku.presentation.screens.ProfileScreen
-import com.example.tetanggaku.presentation.screens.RegisterScreen
-import com.example.tetanggaku.presentation.screens.SplashScreen
+import com.example.tetanggaku.presentation.screens.*
 import com.example.tetanggaku.ui.theme.TetanggakuTheme
 
 // -------------------------
@@ -29,6 +23,14 @@ sealed class Screen(val route: String) {
     object Profile : Screen("profile")
     object JobDetail : Screen("job_detail")
     object CreateJob : Screen("create_job")
+    object Chat : Screen("chat")
+    object ChatDetail : Screen("chat_detail")
+    object Search : Screen("search")
+    object CategoryDetail : Screen("category/{categoryId}") {
+        fun createRoute(categoryId: String) = "category/$categoryId"
+    }
+    object Notifications : Screen("notifications")
+    object LocationPicker : Screen("location_picker")
 }
 
 class MainActivity : ComponentActivity() {
@@ -111,6 +113,21 @@ fun TetanggakuApp() {
                 },
                 onCreateJobClick = {
                     navController.navigate(Screen.CreateJob.route)
+                },
+                onChatClick = {
+                    navController.navigate(Screen.Chat.route)
+                },
+                onSearchClick = {
+                    navController.navigate(Screen.Search.route)
+                },
+                onLocationClick = {
+                    navController.navigate(Screen.LocationPicker.route)
+                },
+                onNotificationClick = {
+                    navController.navigate(Screen.Notifications.route)
+                },
+                onCategoryClick = { categoryId ->
+                    navController.navigate(Screen.CategoryDetail.createRoute(categoryId))
                 }
             )
         }
@@ -141,6 +158,9 @@ fun TetanggakuApp() {
                     // sementara juga balik ke Home
                     navController.popBackStack()
                 },
+                onChatClick = {
+                    navController.navigate(Screen.Chat.route)
+                },
                 onLogout = {
                     // logout → kembali ke login, hapus sampai Home
                     navController.navigate(Screen.Login.route) {
@@ -160,6 +180,147 @@ fun TetanggakuApp() {
                 },
                 onTakeJob = {
                     // TODO: update status job / XP
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        // =======================
+        // Chat
+        // =======================
+        composable(route = Screen.Chat.route) {
+            ChatScreen(
+                onHomeClick = {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Home.route) { inclusive = true }
+                    }
+                },
+                onJobsClick = {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Home.route) { inclusive = true }
+                    }
+                },
+                onChatClick = { /* Already on chat */ },
+                onProfileClick = {
+                    navController.navigate(Screen.Profile.route)
+                },
+                onChatDetailClick = { conversationId ->
+                    navController.navigate(Screen.ChatDetail.route)
+                },
+                onBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        // =======================
+        // Chat Detail
+        // =======================
+        composable(route = Screen.ChatDetail.route) {
+            ChatDetailScreen(
+                onHomeClick = {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Home.route) { inclusive = true }
+                    }
+                },
+                onJobsClick = {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Home.route) { inclusive = true }
+                    }
+                },
+                onChatClick = {
+                    navController.popBackStack()
+                },
+                onProfileClick = {
+                    navController.navigate(Screen.Profile.route)
+                },
+                onBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+        
+        // =======================
+        // Search
+        // =======================
+        composable(route = Screen.Search.route) {
+            SearchScreen(
+                onBack = { navController.popBackStack() },
+                onJobClick = { navController.navigate(Screen.JobDetail.route) },
+                onHomeClick = {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Home.route) { inclusive = true }
+                    }
+                },
+                onJobsClick = {
+                    navController.navigate(Screen.Home.route)
+                },
+                onChatClick = {
+                    navController.navigate(Screen.Chat.route)
+                },
+                onProfileClick = {
+                    navController.navigate(Screen.Profile.route)
+                }
+            )
+        }
+        
+        // =======================
+        // Category Detail
+        // =======================
+        composable(route = Screen.CategoryDetail.route) { backStackEntry ->
+            val categoryId = backStackEntry.arguments?.getString("categoryId") ?: "1"
+            CategoryDetailScreen(
+                categoryId = categoryId,
+                onBack = { navController.popBackStack() },
+                onJobClick = { navController.navigate(Screen.JobDetail.route) },
+                onHomeClick = {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Home.route) { inclusive = true }
+                    }
+                },
+                onJobsClick = {
+                    navController.navigate(Screen.Home.route)
+                },
+                onChatClick = {
+                    navController.navigate(Screen.Chat.route)
+                },
+                onProfileClick = {
+                    navController.navigate(Screen.Profile.route)
+                }
+            )
+        }
+        
+        // =======================
+        // Notifications
+        // =======================
+        composable(route = Screen.Notifications.route) {
+            NotificationsScreen(
+                onBack = { navController.popBackStack() },
+                onHomeClick = {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Home.route) { inclusive = true }
+                    }
+                },
+                onJobsClick = {
+                    navController.navigate(Screen.Home.route)
+                },
+                onChatClick = {
+                    navController.navigate(Screen.Chat.route)
+                },
+                onProfileClick = {
+                    navController.navigate(Screen.Profile.route)
+                }
+            )
+        }
+        
+        // =======================
+        // Location Picker
+        // =======================
+        composable(route = Screen.LocationPicker.route) {
+            LocationPickerScreen(
+                onBack = { navController.popBackStack() },
+                onLocationSelected = { location ->
+                    // TODO: Update location in HomeViewModel
                     navController.popBackStack()
                 }
             )

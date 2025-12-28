@@ -36,7 +36,7 @@ class ProfileViewModel : ViewModel() {
                         userEmail = "udinxyz@example.com",
                         totalJobsCompleted = 12,
                         neighborRating = 4.8,
-                        level = 3,
+                        level = 4,
                         currentXp = 1250,
                         nextLevelXp = 2000,
                         badge = "Tetangga Aktif",

@@ -40,36 +40,37 @@ fun AuthScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFEFF2FF)) // background lembut
+            .background(Color.White) // Clean white background
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 24.dp),
+                .padding(horizontal = 32.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier.height(80.dp))
 
-            // Logo text (kalau mau diganti jadi Image logo, tinggal ubah di sini)
+            // Logo - larger and more prominent
             Text(
                 text = "TetanggaKu",
-                fontSize = 24.sp,
+                fontSize = 32.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF1E40AF),
-                letterSpacing = 1.sp
+                color = Color(0xFF1E3A8A), // Deep blue
+                letterSpacing = 0.5.sp
             )
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(60.dp))
 
             // Judul
             Text(
                 text = "Login to your Account",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Normal,
+                color = Color(0xFF374151),
                 modifier = Modifier.fillMaxWidth()
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
             // Error message
             if (uiState.errorMessage != null) {
@@ -79,7 +80,8 @@ fun AuthScreen(
                         .padding(bottom = 12.dp),
                     colors = CardDefaults.cardColors(
                         containerColor = Color(0xFFFFEBEE)
-                    )
+                    ),
+                    shape = RoundedCornerShape(8.dp)
                 ) {
                     Row(
                         modifier = Modifier
@@ -106,40 +108,54 @@ fun AuthScreen(
                 }
             }
 
-            // Form email
+            // Form email  
             OutlinedTextField(
                 value = uiState.email,
                 onValueChange = { viewModel.onEmailChange(it) },
-                label = { Text("Email") },
-                modifier = Modifier.fillMaxWidth(),
+                label = { Text("Email", fontSize = 14.sp) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
                 singleLine = true,
-                enabled = !uiState.isLoading
+                enabled = !uiState.isLoading,
+                shape = RoundedCornerShape(8.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color(0xFF1E3A8A),
+                    unfocusedBorderColor = Color(0xFFE5E7EB)
+                )
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             // Form password
             OutlinedTextField(
                 value = uiState.password,
                 onValueChange = { viewModel.onPasswordChange(it) },
-                label = { Text("Password") },
-                modifier = Modifier.fillMaxWidth(),
+                label = { Text("Password", fontSize = 14.sp) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
                 singleLine = true,
                 visualTransformation = PasswordVisualTransformation(),
-                enabled = !uiState.isLoading
+                enabled = !uiState.isLoading,
+                shape = RoundedCornerShape(8.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color(0xFF1E3A8A),
+                    unfocusedBorderColor = Color(0xFFE5E7EB)
+                )
             )
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
             // Tombol Sign in
             Button(
                 onClick = { viewModel.login() },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(48.dp),
-                shape = RoundedCornerShape(12.dp),
+                    .height(52.dp),
+                shape = RoundedCornerShape(8.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF1E40AF),
+                    containerColor = Color(0xFF1E3A8A), // Deep blue
                     contentColor = Color.White
                 ),
                 enabled = !uiState.isLoading
@@ -154,12 +170,12 @@ fun AuthScreen(
                     Text(
                         text = "Sign in",
                         fontSize = 16.sp,
-                        fontWeight = FontWeight.SemiBold
+                        fontWeight = FontWeight.Medium
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
             // Divider "Or sign in with"
             Row(
@@ -168,25 +184,27 @@ fun AuthScreen(
             ) {
                 Divider(
                     modifier = Modifier.weight(1f),
-                    color = Color(0xFFDFE3F0)
+                    color = Color(0xFFE5E7EB)
                 )
                 Text(
-                    text = "  Or sign in with  ",
+                    text = "  -Or sign in with-  ",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = Color(0xFF9CA3AF),
+                    fontSize = 12.sp
                 )
                 Divider(
                     modifier = Modifier.weight(1f),
-                    color = Color(0xFFDFE3F0)
+                    color = Color(0xFFE5E7EB)
                 )
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
             // Tombol sosial pakai logo
             Row(
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalAlignment = Alignment.CenterVertically
+                horizontalArrangement = Arrangement.spacedBy(20.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.align(Alignment.CenterHorizontally)
             ) {
                 SocialCircleButton(
                     iconRes = R.drawable.logo_google,
@@ -208,7 +226,7 @@ fun AuthScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
             // Teks ke halaman Sign up
             Row(
@@ -218,13 +236,15 @@ fun AuthScreen(
                 Text(
                     text = "Don't have an account? ",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = Color(0xFF6B7280),
+                    fontSize = 13.sp
                 )
                 Text(
                     text = "Sign up",
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color(0xFF1E40AF),
+                    color = Color(0xFF1E3A8A),
                     fontWeight = FontWeight.SemiBold,
+                    fontSize = 13.sp,
                     modifier = Modifier.clickable { onGoToRegister() }
                 )
             }

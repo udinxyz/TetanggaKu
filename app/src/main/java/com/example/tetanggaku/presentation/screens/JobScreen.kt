@@ -1,87 +1,133 @@
 package com.example.tetanggaku.presentation.screens
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.tetanggaku.presentation.viewmodels.*
+
+// Teal color palette
+private val TealPrimary = Color(0xFF2D7A7A)
+private val TealLight = Color(0xFFE0F2F1)
+private val SuccessGreen = Color(0xFF10B981)
+private val LightGray = Color(0xFFF3F4F6)
+private val DarkGray = Color(0xFF6B7280)
 
 /**
- * Data sederhana untuk 1 job milik user
- */
-data class JobUiModel(
-    val id: String,
-    val title: String,
-    val category: String,
-    val shortDescription: String,
-    val price: String,
-    val status: String,      // contoh: "Menunggu tetangga", "Sedang dikerjakan", "Selesai"
-    val progress: Float      // 0f..1f
-)
-
-/**
- * Daftar Job Saya
- * Job akan bisa di-klik, dan callback onJobClick dipanggil
+ * JobScreen with category toggle (Ongoing vs Completed)
  */
 @Composable
 fun JobScreen(
     modifier: Modifier = Modifier,
-    jobs: List<JobUiModel> = sampleMyJobs,
-    onJobClick: (JobUiModel) -> Unit
+    onJobClick: (Job) -> Unit,
+    viewModel: JobViewModel = viewModel()
 ) {
+    val uiState by viewModel.uiState.collectAsState()
+    
     Surface(
         modifier = modifier
             .fillMaxSize()
-            .background(Color(0xFFF3F6F7))
+            .background(Color.White)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 16.dp, vertical = 12.dp)
         ) {
-
-            // Header kecil
+            // Header
             Text(
-                text = "Job Saya",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 18.sp
+                text = "My Jobs",
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF1F2937)
             )
 
             Spacer(modifier = Modifier.height(4.dp))
 
             Text(
-                text = "Lihat progress permintaan bantuanmu.",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                text = "Lihat progress permintaan bantuanmu",
+                fontSize = 14.sp,
+                color = DarkGray
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
-            // List job
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(jobs) { job ->
-                    JobCardItem(
-                        job = job,
-                        modifier = Modifier.clickable { onJobClick(job) }
-                    )
+            // Category Toggle
+            CategoryToggle(
+                selectedCategory = uiState.selectedCategory,
+                onCategoryChange = { viewModel.selectCategory(it) }
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // Job List based on selected category
+            val jobsToDisplay = when (uiState.selectedCategory) {
+                JobCategory.ONGOING -> uiState.ongoingJobs
+                JobCategory.COMPLETED -> uiState.completedJobs
+            }
+
+            if (uiState.isLoading) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = TealPrimary)
+                }
+            } else if (jobsToDisplay.isEmpty()) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(
+                            imageVector = Icons.Filled.CheckCircle,
+                            contentDescription = null,
+                            modifier = Modifier.size(64.dp),
+                            tint = Color.Gray
+                        )
+                        Spacer(Modifier.height(16.dp))
+                        Text(
+                            text = if (uiState.selectedCategory == JobCategory.ONGOING) {
+                                "Tidak ada job yang sedang berlangsung"
+                            } else {
+                                "Belum ada job yang selesai"
+                            },
+                            color = Color.Gray,
+                            fontSize = 14.sp
+                        )
+                    }
+                }
+            } else {
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(jobsToDisplay) { job ->
+                        JobCard(
+                            job = job,
+                            isCompleted = job.isCompleted,
+                            onClick = { onJobClick(job) }
+                        )
+                    }
                 }
             }
         }
@@ -89,171 +135,294 @@ fun JobScreen(
 }
 
 /**
- * 1 card job di halaman "Job Saya"
+ * Segmented control for category selection
  */
 @Composable
-private fun JobCardItem(
-    job: JobUiModel,
+private fun CategoryToggle(
+    selectedCategory: JobCategory,
+    onCategoryChange: (JobCategory) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(LightGray)
+            .padding(4.dp),
+        horizontalArrangement = Arrangement.Center
+    ) {
+        ToggleButton(
+            text = "Sedang Berlangsung",
+            isSelected = selectedCategory == JobCategory.ONGOING,
+            onClick = { onCategoryChange(JobCategory.ONGOING) },
+            modifier = Modifier.weight(1f)
+        )
+        
+        Spacer(modifier = Modifier.width(4.dp))
+        
+        ToggleButton(
+            text = "Sudah Selesai",
+            isSelected = selectedCategory == JobCategory.COMPLETED,
+            onClick = { onCategoryChange(JobCategory.COMPLETED) },
+            modifier = Modifier.weight(1f)
+        )
+    }
+}
+
+@Composable
+private fun ToggleButton(
+    text: String,
+    isSelected: Boolean,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 14.dp)
-        ) {
-
-            // Kategori
-            Text(
-                text = job.category,
-                style = MaterialTheme.typography.labelSmall,
-                color = Color(0xFF6366F1),
-                fontWeight = FontWeight.SemiBold
-            )
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            // Judul job
-            Text(
-                text = job.title,
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.SemiBold,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            )
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            // Deskripsi singkat
-            Text(
-                text = job.shortDescription,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            )
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            // Progress + status
-            Column {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        text = "Progress",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-
-                    // Status text di kanan
-                    StatusPill(text = job.status)
-                }
-
-                Spacer(modifier = Modifier.height(6.dp))
-
-                LinearProgressIndicator(
-                    progress = job.progress.coerceIn(0f, 1f),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(6.dp),
-                    trackColor = Color(0xFFE5E7EB),
-                    color = Color(0xFF4ADE80)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            // Harga di bawah
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    text = job.price,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.SemiBold
-                )
-
-                Text(
-                    text = "Lihat detail",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color(0xFF6366F1),
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
-        }
-    }
-}
-
-/**
- * Badge status kecil (Menunggu / Proses / Selesai)
- */
-@Composable
-private fun StatusPill(text: String) {
-    val (bg, fg) = when {
-        text.contains("Selesai", ignoreCase = true) ->
-            Color(0xFFD1FAE5) to Color(0xFF059669)
-        text.contains("Proses", ignoreCase = true) ||
-                text.contains("dikerjakan", ignoreCase = true) ->
-            Color(0xFFFEF3C7) to Color(0xFF92400E)
-        else ->
-            Color(0xFFE5E7EB) to Color(0xFF4B5563)
-    }
-
+    val backgroundColor by animateColorAsState(
+        targetValue = if (isSelected) TealPrimary else Color.Transparent,
+        label = "bg color"
+    )
+    
+    val textColor by animateColorAsState(
+        targetValue = if (isSelected) Color.White else DarkGray,
+        label = "text color"
+    )
+    
     Box(
-        modifier = Modifier
-            .background(bg, shape = RoundedCornerShape(999.dp))
-            .padding(horizontal = 10.dp, vertical = 4.dp),
+        modifier = modifier
+            .clip(RoundedCornerShape(8.dp))
+            .background(backgroundColor)
+            .clickable(onClick = onClick)
+            .padding(vertical = 10.dp, horizontal = 12.dp),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = text,
-            fontSize = 11.sp,
-            color = fg,
-            fontWeight = FontWeight.SemiBold
+            fontSize = 14.sp,
+            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
+            color = textColor
         )
     }
 }
 
 /**
- * Sample data sementara (hardcoded)
- * Nanti bisa diganti dari backend / database
+ * Job Card - Different UI for ongoing vs completed
  */
-private val sampleMyJobs = listOf(
-    JobUiModel(
-        id = "1",
-        title = "Bantu angkat lemari ke lantai 2",
-        category = "Angkut",
-        shortDescription = "Lemari kayu cukup berat, butuh 2 orang bantu angkat ke lantai atas.",
-        price = "Rp50.000",
-        status = "Sedang dikerjakan",
-        progress = 0.5f
-    ),
-    JobUiModel(
-        id = "2",
-        title = "Titip beli obat flu di apotek",
-        category = "Titip beli",
-        shortDescription = "Titip beli obat flu di apotek dekat komplek, nanti diganti uangnya.",
-        price = "Rp25.000",
-        status = "Menunggu tetangga",
-        progress = 0.2f
-    ),
-    JobUiModel(
-        id = "3",
-        title = "Bantu pasang lampu taman",
-        category = "Perbaikan",
-        shortDescription = "Pasang 3 lampu taman di halaman rumah. Tangga sudah disediakan.",
-        price = "Rp40.000",
-        status = "Selesai",
-        progress = 1f
-    )
-)
+@Composable
+private fun JobCard(
+    job: Job,
+    isCompleted: Boolean,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            // Category
+            Text(
+                text = job.category,
+                fontSize = 12.sp,
+                color = TealPrimary,
+                fontWeight = FontWeight.SemiBold
+            )
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            // Title
+            Text(
+                text = job.title,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                color = Color(0xFF1F2937)
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            // Description
+            Text(
+                text = job.shortDescription,
+                fontSize = 13.sp,
+                color = DarkGray,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            if (isCompleted) {
+                // Completed job UI
+                CompletedJobInfo(job)
+            } else {
+                // Ongoing job UI
+                OngoingJobProgress(job)
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Bottom row: Price & Action
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = job.price,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF1F2937)
+                )
+
+                Text(
+                    text = "Lihat detail ›",
+                    fontSize = 13.sp,
+                    color = TealPrimary,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Progress indicator for ongoing jobs
+ */
+@Composable
+private fun OngoingJobProgress(job: Job) {
+    Column {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Progress",
+                fontSize = 12.sp,
+                color = DarkGray
+            )
+
+            // Status badge
+            StatusBadge(status = job.status)
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        LinearProgressIndicator(
+            progress = job.progress.coerceIn(0f, 1f),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(6.dp)
+                .clip(RoundedCornerShape(3.dp)),
+            trackColor = Color(0xFFE5E7EB),
+            color = TealPrimary
+        )
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        Text(
+            text = "${(job.progress * 100).toInt()}% selesai",
+            fontSize = 11.sp,
+            color = DarkGray
+        )
+    }
+}
+
+/**
+ * Completion info for completed jobs
+ */
+@Composable
+private fun CompletedJobInfo(job: Job) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Completed badge with checkmark
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Filled.CheckCircle,
+                contentDescription = "Completed",
+                tint = SuccessGreen,
+                modifier = Modifier.size(20.dp)
+            )
+            
+            Column {
+                Text(
+                    text = "Selesai",
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = SuccessGreen
+                )
+                
+                job.completedDate?.let {
+                    Text(
+                        text = it,
+                        fontSize = 11.sp,
+                        color = DarkGray
+                    )
+                }
+            }
+        }
+
+        // Rating stars
+        job.rating?.let { rating ->
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Star,
+                    contentDescription = "Rating",
+                    tint = Color(0xFFFBBF24),
+                    modifier = Modifier.size(16.dp)
+                )
+                Text(
+                    text = String.format("%.1f", rating),
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color(0xFF1F2937)
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Status badge for ongoing jobs
+ */
+@Composable
+private fun StatusBadge(status: String) {
+    val (bgColor, textColor) = when {
+        status.contains("Selesai", ignoreCase = true) ->
+            Color(0xFFD1FAE5) to SuccessGreen
+        status.contains("Proses", ignoreCase = true) ||
+        status.contains("Hampir", ignoreCase = true) ->
+            Color(0xFFFEF3C7) to Color(0xFF92400E)
+        else ->
+            LightGray to DarkGray
+    }
+
+    Box(
+        modifier = Modifier
+            .background(bgColor, shape = RoundedCornerShape(999.dp))
+            .padding(horizontal = 10.dp, vertical = 4.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = status,
+            fontSize = 11.sp,
+            color = textColor,
+            fontWeight = FontWeight.SemiBold
+        )
+    }
+}

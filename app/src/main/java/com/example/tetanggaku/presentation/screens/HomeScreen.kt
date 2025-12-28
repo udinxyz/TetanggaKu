@@ -1,134 +1,137 @@
 package com.example.tetanggaku.presentation.screens
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.List
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Divider
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.tetanggaku.R
+import com.example.tetanggaku.presentation.components.BottomNavigationBar
+import com.example.tetanggaku.presentation.viewmodels.*
 
-// TAB untuk bottom nav di Home — sekarang didefinisikan di file ini
-enum class HomeTab {
-    BERANDA, JOB_SAYA, PROFIL
-}
+// Teal color palette matching AFTER design (darker, more saturated)
+private val TealPrimary = Color(0xFF1D5F5F)  // Darker teal for header
+private val TealLight = Color(0xFF2D7A7A)
+private val TealDark = Color(0xFF0F3F3F)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     onProfileClick: () -> Unit,
     onJobDetailClick: () -> Unit,
-    onCreateJobClick: () -> Unit = {},          // optional, dipakai tombol "Buat permintaan"
-    onAiAsk: (String) -> Unit = {}              // optional, kalau nanti kamu sambung ke backend AI
+    onCreateJobClick: () -> Unit = {},
+    onChatClick: () -> Unit = {},
+    onSearchClick: () -> Unit = {},
+    onLocationClick: () -> Unit = {},
+    onNotificationClick: () -> Unit = {},
+    onCategoryClick: (String) -> Unit = {},
+    viewModel: HomeViewModel = viewModel()
 ) {
-    val selectedTab = remember { mutableStateOf(HomeTab.BERANDA) }
-
-    // State untuk AI bottom sheet
-    val showAiSheet = remember { mutableStateOf(false) }
-    val aiQuestion = remember { mutableStateOf("") }
-    val aiAnswer = remember { mutableStateOf("") }
+    val uiState by viewModel.uiState.collectAsState()
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     Scaffold(
         floatingActionButton = {
-            // Tombol AI di pojok kanan bawah (mengganti tombol +)
             FloatingActionButton(
-                onClick = { showAiSheet.value = true },
-                containerColor = Color(0xFF4F46E5),
+                onClick = { viewModel.showAiSheet() },
+                containerColor = TealPrimary,
                 contentColor = Color.White,
                 shape = RoundedCornerShape(20.dp)
             ) {
-                Text(
-                    text = "AI",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp
-                )
-            }
-        },
-        bottomBar = {
-            Surface(
-                color = Color.White,
-                shadowElevation = 8.dp
-            ) {
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 24.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    BottomNavItemHome(
-                        icon = Icons.Filled.Home,
-                        label = "Beranda",
-                        selected = selectedTab.value == HomeTab.BERANDA,
-                        onClick = { selectedTab.value = HomeTab.BERANDA }
+                    Icon(
+                        imageVector = Icons.Filled.Star,
+                        contentDescription = "AI",
+                        modifier = Modifier.size(20.dp)
                     )
-                    BottomNavItemHome(
-                        icon = Icons.Filled.List,
-                        label = "Job Saya",
-                        selected = selectedTab.value == HomeTab.JOB_SAYA,
-                        onClick = { selectedTab.value = HomeTab.JOB_SAYA }
-                    )
-                    BottomNavItemHome(
-                        icon = Icons.Filled.Person,
-                        label = "Profil",
-                        selected = selectedTab.value == HomeTab.PROFIL,
-                        onClick = {
-                            selectedTab.value = HomeTab.PROFIL
-                            onProfileClick()
-                        }
+                    Text(
+                        text = "AI",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp
                     )
                 }
             }
+        },
+        bottomBar = {
+            BottomNavigationBar(
+                selectedTab = uiState.selectedTab,
+                onHomeClick = { viewModel.selectTab(HomeTab.HOME) },
+                onJobsClick = { viewModel.selectTab(HomeTab.JOBS) },
+                onChatClick = {
+                    viewModel.selectTab(HomeTab.CHAT)
+                    onChatClick()
+                },
+                onProfileClick = {
+                    viewModel.selectTab(HomeTab.PROFILE)
+                    onProfileClick()
+                }
+            )
         }
     ) { innerPadding ->
-        when (selectedTab.value) {
-            HomeTab.BERANDA -> {
+        when (uiState.selectedTab) {
+            HomeTab.HOME -> {
                 HomeBerandaContent(
                     modifier = Modifier.padding(innerPadding),
+                    uiState = uiState,
                     onCreateJobClick = onCreateJobClick,
-                    onJobDetailClick = onJobDetailClick
+                    onJobDetailClick = onJobDetailClick,
+                    onSearchClick = onSearchClick,
+                    onLocationClick = onLocationClick,
+                    onNotificationClick = onNotificationClick,
+                    onCategoryClick = onCategoryClick,
+                    onRetry = { viewModel.loadAvailableJobs() }
                 )
             }
 
-            HomeTab.JOB_SAYA -> {
-                HomeJobSayaContent(
+            HomeTab.JOBS -> {
+                JobScreen(
                     modifier = Modifier.padding(innerPadding),
-                    onJobDetailClick = onJobDetailClick
+                    onJobClick = { job -> onJobDetailClick() }
                 )
             }
 
-            HomeTab.PROFIL -> {
-                // Konten profil di-handle di ProfileScreen via nav
+            HomeTab.CHAT -> {
+                // Chat navigation handled by onClick
+                Box(
+                    modifier = Modifier
+                        .padding(innerPadding)
+                        .fillMaxSize()
+                )
+            }
+
+            HomeTab.PROFILE -> {
+                // Profile navigation handled by onClick
                 Box(
                     modifier = Modifier
                         .padding(innerPadding)
@@ -138,12 +141,10 @@ fun HomeScreen(
         }
     }
 
-    // ============================
-    // BOTTOM SHEET: TETANGGA AI
-    // ============================
-    if (showAiSheet.value) {
+    // AI Bottom Sheet
+    if (uiState.showAiSheet) {
         ModalBottomSheet(
-            onDismissRequest = { showAiSheet.value = false },
+            onDismissRequest = { viewModel.hideAiSheet() },
             sheetState = sheetState
         ) {
             Column(
@@ -159,56 +160,52 @@ fun HomeScreen(
                 )
 
                 Text(
-                    text = "Tulis masalah atau pekerjaan yang ingin kamu tanyakan. " +
-                            "AI akan bantu kasih solusi cepat.",
+                    text = "Tulis masalah atau pekerjaan yang ingin kamu tanyakan. AI akan bantu kasih solusi cepat.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
                 OutlinedTextField(
-                    value = aiQuestion.value,
-                    onValueChange = { aiQuestion.value = it },
+                    value = uiState.aiQuestion,
+                    onValueChange = { viewModel.updateAiQuestion(it) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .heightIn(min = 100.dp),
                     placeholder = {
                         Text("Contoh: Cara aman angkat lemari ke lantai 2 gimana?")
-                    }
+                    },
+                    enabled = !uiState.aiLoading
                 )
 
                 Button(
-                    onClick = {
-                        if (aiQuestion.value.isNotBlank()) {
-                            onAiAsk(aiQuestion.value)
-
-                            // Sementara: jawaban dummy lokal
-                            aiAnswer.value =
-                                "Ini contoh jawaban AI:\n\n" +
-                                        "1. Kalau berat, minta bantuan tetangga lain.\n" +
-                                        "2. Kosongkan isi lemari dulu supaya lebih ringan.\n" +
-                                        "3. Pakai alas kain/karpet di kaki lemari agar mudah digeser.\n" +
-                                        "4. Jaga punggung tetap lurus dan angkat dengan kekuatan kaki."
-                        }
-                    },
+                    onClick = { viewModel.askAI() },
                     modifier = Modifier.fillMaxWidth(),
+                    enabled = uiState.aiQuestion.isNotBlank() && !uiState.aiLoading,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF4F46E5),
+                        containerColor = TealPrimary,
                         contentColor = Color.White
                     ),
                     shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text("Dapatkan Solusi")
+                    if (uiState.aiLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            color = Color.White
+                        )
+                    } else {
+                        Text("Dapatkan Solusi")
+                    }
                 }
 
-                if (aiAnswer.value.isNotBlank()) {
-                    Divider()
+                if (uiState.aiAnswer.isNotBlank()) {
+                    HorizontalDivider()
                     Text(
                         text = "Jawaban AI:",
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 13.sp
                     )
                     Text(
-                        text = aiAnswer.value,
+                        text = uiState.aiAnswer,
                         style = MaterialTheme.typography.bodySmall,
                         lineHeight = 18.sp
                     )
@@ -221,210 +218,382 @@ fun HomeScreen(
 }
 
 // =====================
-// Konten tab Beranda
+// Konten tab Beranda dengan Design Baru
 // =====================
 @Composable
 private fun HomeBerandaContent(
     modifier: Modifier = Modifier,
+    uiState: HomeUiState,
     onCreateJobClick: () -> Unit,
-    onJobDetailClick: () -> Unit
+    onJobDetailClick: () -> Unit,
+    onSearchClick: () -> Unit,
+    onLocationClick: () -> Unit,
+    onNotificationClick: () -> Unit,
+    onCategoryClick: (String) -> Unit,
+    onRetry: () -> Unit
 ) {
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(Color(0xFFF3F6F7))
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 16.dp, vertical = 16.dp)
+            .background(Color.White)
     ) {
-        Text(
-            text = "Hi, Tetangga!",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold
-        )
-        Text(
-            text = "Komplek Melati, Blok C",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+        // Dark Teal Header
+        TealHeader(
+            currentLocation = uiState.currentLocation,
+            unreadCount = uiState.unreadNotificationCount,
+            onLocationClick = onLocationClick,
+            onNotificationClick = onNotificationClick
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Banner ungu
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(
-                containerColor = Color(0xFF7C3AED)
-            ),
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-            shape = RoundedCornerShape(18.dp)
+        // Scrollable content
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(bottom = 16.dp)
         ) {
-            Column(
-                modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+            // Search Bar
+            SearchBar(onClick = onSearchClick)
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Hero Banner (Teal)
+            HeroBanner(onCreateJobClick = onCreateJobClick)
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Service Categories Section
+            ServiceCategoriesSection(
+                categories = uiState.serviceCategories,
+                onCategoryClick = onCategoryClick
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Popular Services Section
+            PopularServicesSection(
+                jobListState = uiState.availableJobs,
+                onJobDetailClick = onJobDetailClick,
+                onRetry = onRetry
+            )
+
+            Spacer(modifier = Modifier.height(80.dp))
+        }
+    }
+}
+
+// =====================
+// Teal Header Component
+// =====================
+@Composable
+private fun TealHeader(
+    currentLocation: String = "San Antonio, TX",
+    unreadCount: Int = 0,
+    onLocationClick: () -> Unit = {},
+    onNotificationClick: () -> Unit = {}
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = TealPrimary,
+        shadowElevation = 4.dp
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Location
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.weight(1f)
             ) {
-                Text(
-                    text = "Butuh bantuan hari ini?",
-                    color = Color.White,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 16.sp
+                Icon(
+                    imageVector = Icons.Filled.LocationOn,
+                    contentDescription = "Location",
+                    tint = Color.White,
+                    modifier = Modifier.size(20.dp)
                 )
-                Text(
-                    text = "Lihat job yang tersedia atau buat permintaan baru untuk tetangga di sekitar.",
-                    color = Color(0xFFEDE9FE),
-                    fontSize = 13.sp
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                Button(
-                    onClick = onCreateJobClick,
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFF5F3FF),
-                        contentColor = Color(0xFF5B21B6)
-                    )
+                Spacer(modifier = Modifier.width(6.dp))
+                Column(
+                    modifier = Modifier.clickable { onLocationClick() }
                 ) {
-                    Text("Buat permintaan")
+                    Text(
+                        text = "Your Location",
+                        color = Color.White.copy(alpha = 0.8f),
+                        fontSize = 11.sp
+                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = currentLocation,
+                            color = Color.White,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Icon(
+                            imageVector = Icons.Filled.ArrowDropDown,
+                            contentDescription = "Dropdown",
+                            tint = Color.White,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+            }
+
+            // Notification & Profile
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Notification Bell
+                Box {
+                    IconButton(onClick = onNotificationClick) {
+                        Icon(
+                            imageVector = Icons.Filled.Notifications,
+                            contentDescription = "Notifications",
+                            tint = Color.White
+                        )
+                    }
+                    if (unreadCount > 0) {
+                        Box(
+                            modifier = Modifier
+                                .size(18.dp)
+                                .offset(x = 20.dp, y = 8.dp)
+                                .clip(CircleShape)
+                                .background(Color.Red),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = unreadCount.toString(),
+                                color = Color.White,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
+
+                // Profile Photo
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(Color.White.copy(alpha = 0.2f))
+                        .clickable { /* TODO: Profile */ },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Person,
+                        contentDescription = "Profile",
+                        tint = Color.White,
+                        modifier = Modifier.size(24.dp)
+                    )
                 }
             }
         }
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-        Text(
-            text = "Job di sekitar kamu",
-            style = MaterialTheme.typography.titleSmall,
-            fontWeight = FontWeight.SemiBold
-        )
-
-        Spacer(modifier = Modifier.height(10.dp))
-
-        JobCardItem(
-            category = "Angkut",
-            title = "Bantu angkat lemari ke lantai 2",
-            description = "Lemari kayu cukup berat, butuh 2 orang bantu angkat ke lantai atas.",
-            price = "Rp50.000",
-            requester = "Mbak Sari",
-            verified = true,
-            onClick = onJobDetailClick
-        )
     }
 }
 
 // =====================
-// Konten tab Job Saya
+// Search Bar Component
 // =====================
 @Composable
-private fun HomeJobSayaContent(
-    modifier: Modifier = Modifier,
-    onJobDetailClick: () -> Unit
-) {
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(Color(0xFFF3F6F7))
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp)
-    ) {
-        Text(
-            text = "Job Saya",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-
-        JobCardItem(
-            category = "Titip beli",
-            title = "Titip beli obat flu",
-            description = "Titip beli obat flu dan vitamin di apotek depan komplek.",
-            price = "Rp30.000",
-            requester = "Kamu",
-            verified = false,
-            onClick = onJobDetailClick
-        )
-    }
-}
-
-@Composable
-private fun JobCardItem(
-    category: String,
-    title: String,
-    description: String,
-    price: String,
-    requester: String,
-    verified: Boolean,
-    onClick: () -> Unit
-) {
+private fun SearchBar(onClick: () -> Unit = {}) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() },
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onClick)
+                .padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Search,
+                contentDescription = "Search",
+                tint = Color(0xFF9CA3AF),
+                modifier = Modifier.size(22.dp)
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Text(
+                text = "Search for a service...",
+                color = Color(0xFF9CA3AF),
+                fontSize = 14.sp
+            )
+        }
+    }
+}
+
+// =====================
+// Hero Banner (Teal Theme)
+// =====================
+@Composable
+private fun HeroBanner(onCreateJobClick: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color.White
+            containerColor = TealPrimary
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         shape = RoundedCornerShape(16.dp)
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Text content
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    text = "YOUR SOLUTION,\nONE TAP AWAY!",
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
+                    lineHeight = 22.sp
+                )
+                Text(
+                    text = "Services, Fast & Reliable\nServices At Your Fingertips",
+                    color = Color.White.copy(alpha = 0.9f),
+                    fontSize = 12.sp,
+                    lineHeight = 16.sp
+                )
+
+                Button(
+                    onClick = onCreateJobClick,
+                    shape = RoundedCornerShape(8.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.White,
+                        contentColor = TealPrimary
+                    )
+                ) {
+                    Text("Explore", fontWeight = FontWeight.SemiBold)
+                }
+            }
+
+            // Placeholder for isometric illustration
+            Box(
+                modifier = Modifier
+                    .size(100.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(TealLight.copy(alpha = 0.3f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Build,
+                    contentDescription = "Service",
+                    tint = Color.White,
+                    modifier = Modifier.size(48.dp)
+                )
+            }
+        }
+    }
+}
+
+// =====================
+// Service Categories Section
+// =====================
+@Composable
+private fun ServiceCategoriesSection(
+    categories: List<ServiceCategory>,
+    onCategoryClick: (String) -> Unit = {}
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        // Header
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = category,
-                color = Color(0xFF6366F1),
-                fontSize = 12.sp,
-                fontWeight = FontWeight.SemiBold
+                text = "Service Categories",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF1F2937)
             )
             Text(
-                text = title,
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.SemiBold,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
+                text = "View all ›",
+                fontSize = 14.sp,
+                color = TealPrimary,
+                fontWeight = FontWeight.Medium,
+                modifier = Modifier.clickable { /* TODO */ }
             )
-            Text(
-                text = description,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 3,
-                overflow = TextOverflow.Ellipsis
-            )
+        }
 
-            Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column {
-                    Text(
-                        text = price,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp
-                    )
-                    Text(
-                        text = requester,
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-
-                if (verified) {
-                    Surface(
-                        color = Color(0xFF22C55E),
-                        shape = RoundedCornerShape(999.dp)
-                    ) {
-                        Text(
-                            text = "Verified",
-                            color = Color.White,
-                            fontSize = 11.sp,
-                            modifier = Modifier.padding(
-                                horizontal = 10.dp,
-                                vertical = 4.dp
+        // Grid layout for categories (2x2)
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // Take only first 4 categories for 2x2 grid
+            val displayCategories = categories.take(4)
+            
+            // First row
+            if (displayCategories.isNotEmpty()) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    displayCategories.getOrNull(0)?.let { category ->
+                        Box(modifier = Modifier.weight(1f)) {
+                            CategoryCardGrid(
+                                category = category,
+                                onClick = { onCategoryClick(category.id) }
                             )
-                        )
+                        }
+                    }
+                    displayCategories.getOrNull(1)?.let { category ->
+                        Box(modifier = Modifier.weight(1f)) {
+                            CategoryCardGrid(
+                                category = category,
+                                onClick = { onCategoryClick(category.id) }
+                            )
+                        }
+                    }
+                }
+            }
+            
+            // Second row
+            if (displayCategories.size > 2) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    displayCategories.getOrNull(2)?.let { category ->
+                        Box(modifier = Modifier.weight(1f)) {
+                            CategoryCardGrid(
+                                category = category,
+                                onClick = { onCategoryClick(category.id) }
+                            )
+                        }
+                    }
+                    displayCategories.getOrNull(3)?.let { category ->
+                        Box(modifier = Modifier.weight(1f)) {
+                            CategoryCardGrid(
+                                category = category,
+                                onClick = { onCategoryClick(category.id) }
+                            )
+                        }
                     }
                 }
             }
@@ -432,26 +601,424 @@ private fun JobCardItem(
     }
 }
 
+// =====================
+// Category Card Component
+// =====================
 @Composable
-private fun BottomNavItemHome(
-    icon: ImageVector,
-    label: String,
-    selected: Boolean,
-    onClick: () -> Unit
-) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.clickable { onClick() }
+private fun CategoryCard(category: ServiceCategory) {
+    Card(
+        modifier = Modifier
+            .width(100.dp)
+            .clickable { /* TODO */ },
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        shape = RoundedCornerShape(12.dp)
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = label,
-            tint = if (selected) Color(0xFF6366F1) else Color(0xFF9CA3AF)
-        )
-        Text(
-            text = label,
-            fontSize = 11.sp,
-            color = if (selected) Color(0xFF6366F1) else Color(0xFF9CA3AF)
-        )
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            // Icon circle
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(CircleShape)
+                    .background(TealPrimary.copy(alpha = 0.1f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = getCategoryIcon(category.iconName),
+                    contentDescription = category.name,
+                    tint = TealPrimary,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+
+            Text(
+                text = category.name,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Medium,
+                color = Color(0xFF1F2937),
+                textAlign = TextAlign.Center,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
     }
 }
+
+// =====================
+// Category Card Grid Component (For 2x2 Layout)
+// =====================
+@Composable
+private fun CategoryCardGrid(
+    category: ServiceCategory,
+    onClick: () -> Unit = {}
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // Icon circle
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(TealPrimary.copy(alpha = 0.1f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = getCategoryIcon(category.iconName),
+                    contentDescription = category.name,
+                    tint = TealPrimary,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+
+            Text(
+                text = category.name,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
+                color = Color(0xFF1F2937),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f)
+            )
+            
+            Icon(
+                imageVector = Icons.Filled.KeyboardArrowRight,
+                contentDescription = "Arrow",
+                tint = Color(0xFF9CA3AF),
+                modifier = Modifier.size(20.dp)
+            )
+        }
+    }
+}
+
+// Helper function to get icon based on name
+@Composable
+private fun getCategoryIcon(iconName: String): ImageVector {
+    return when (iconName) {
+        "scissors" -> Icons.Filled.Settings // Approximate
+        " cleaning" -> Icons.Filled.Build
+        "painting" -> Icons.Filled.Edit
+        "cooking" -> Icons.Filled.Star
+        else -> Icons.Filled.Star
+    }
+}
+
+// =====================
+// Popular Services Section
+// =====================
+@Composable
+private fun PopularServicesSection(
+    jobListState: JobListState,
+    onJobDetailClick: () -> Unit,
+    onRetry: () -> Unit
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        // Header
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Popular Services",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF1F2937)
+            )
+            Text(
+                text = "View all ›",
+                fontSize = 14.sp,
+                color = TealPrimary,
+                fontWeight = FontWeight.Medium,
+                modifier = Modifier.clickable { /* TODO */ }
+            )
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // Handle different states
+        when (jobListState) {
+            is JobListState.Loading -> {
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(3) {
+                        ServiceCardLoading()
+                    }
+                }
+            }
+            is JobListState.Success -> {
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(jobListState.jobs) { job ->
+                        ServiceCard(job = job, onClick = onJobDetailClick)
+                    }
+                }
+            }
+            is JobListState.Empty -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(32.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "No services available",
+                        color = Color(0xFF9CA3AF),
+                        fontSize = 14.sp
+                    )
+                }
+            }
+            is JobListState.Error -> {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(32.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = jobListState.message,
+                        color = Color(0xFF9CA3AF),
+                        fontSize = 14.sp,
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    TextButton(onClick = onRetry) {
+                        Text("Retry", color = TealPrimary)
+                    }
+                }
+            }
+        }
+    }
+}
+
+// =====================
+// Service Card Component (Horizontal)
+// =====================
+@Composable
+private fun ServiceCard(job: JobItem, onClick: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .width(180.dp)
+            .clickable(onClick = onClick),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            // Image placeholder
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(120.dp)
+                    .background(TealLight.copy(alpha = 0.15f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Build,
+                    contentDescription = job.title,
+                    tint = TealPrimary.copy(alpha = 0.5f),
+                    modifier = Modifier.size(48.dp)
+                )
+            }
+
+            // Content
+            Column(
+                modifier = Modifier.padding(12.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                // Rating
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Star,
+                        contentDescription = "Rating",
+                        tint = Color(0xFFFBBF24),
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Text(
+                        text = job.rating.toString(),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFF1F2937)
+                    )
+                    Text(
+                        text = "(${job.reviewCount} Reviews)",
+                        fontSize = 11.sp,
+                        color = Color(0xFF9CA3AF)
+                    )
+                }
+
+                // Title
+                Text(
+                    text = job.title,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color(0xFF1F2937),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                // Price
+                Text(
+                    text = job.price,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = TealPrimary
+                )
+            }
+        }
+    }
+}
+
+// =====================
+// Service Card Loading State
+// =====================
+@Composable
+private fun ServiceCardLoading() {
+    Card(
+        modifier = Modifier.width(180.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Column {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(120.dp)
+                    .background(Color(0xFFE0E0E0))
+            )
+            Column(
+                modifier = Modifier.padding(12.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .width(60.dp)
+                        .height(14.dp)
+                        .background(Color(0xFFE0E0E0), RoundedCornerShape(4.dp))
+                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(16.dp)
+                        .background(Color(0xFFE0E0E0), RoundedCornerShape(4.dp))
+                )
+                Box(
+                    modifier = Modifier
+                        .width(50.dp)
+                        .height(14.dp)
+                        .background(Color(0xFFE0E0E0), RoundedCornerShape(4.dp))
+                )
+            }
+        }
+    }
+}
+
+// =====================
+// Job Saya Content (Keep existing or simplify)
+// =====================
+@Composable
+private fun HomeJobSayaContent(
+    modifier: Modifier = Modifier,
+    jobListState: JobListState,
+    onJobDetailClick: () -> Unit,
+    onRetry: () -> Unit
+) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .background(Color(0xFFF9FAFB))
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp)
+    ) {
+        Text(
+            text = "Job Saya",
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold,
+            fontSize = 24.sp
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+
+        when (jobListState) {
+            is JobListState.Loading -> {
+                repeat(2) {
+                    ServiceCardLoading()
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
+            }
+            is JobListState.Success -> {
+                jobListState.jobs.forEach { job ->
+                    ServiceCard(job = job, onClick = onJobDetailClick)
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
+            }
+            is JobListState.Empty -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 48.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Belum ada job yang kamu buat",
+                        color = Color(0xFF9CA3AF),
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+            is JobListState.Error -> {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 48.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = jobListState.message,
+                        color = Color(0xFF9CA3AF),
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Button(
+                        onClick = onRetry,
+                        colors = ButtonDefaults.buttonColors(containerColor = TealPrimary)
+                    ) {
+                        Text("Retry")
+                    }
+                }
+            }
+        }
+    }
+}
+

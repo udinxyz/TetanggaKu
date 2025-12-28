@@ -46,12 +46,16 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.tetanggaku.ui.theme.TetanggakuTheme
 import com.example.tetanggaku.R
+import com.example.tetanggaku.presentation.components.BottomNavigationBar
 import com.example.tetanggaku.presentation.viewmodels.ProfileViewModel
+import com.example.tetanggaku.presentation.viewmodels.HomeTab
 
 @Composable
 fun ProfileScreen(
+    selectedTab: HomeTab = HomeTab.PROFILE,
     onHomeClick: () -> Unit,
     onJobClick: () -> Unit = {},
+    onChatClick: () -> Unit = {},
     onLogout: () -> Unit = {},
     onMyProfileClick: () -> Unit = {},
     onMessagesClick: () -> Unit = {},
@@ -60,360 +64,398 @@ fun ProfileScreen(
     viewModel: ProfileViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val selectedTabState = remember { mutableStateOf(HomeTab.PROFIL) }
+    val selectedTabState = remember { mutableStateOf(HomeTab.PROFILE) }
     val xpProgress = viewModel.getXpProgress()
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF3F6F7))
+            .background(Color(0xFFF5F5F5)) // Light gray background
     ) {
-        // Header biru rounded
-        Surface(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(210.dp),
-            color = Color(0xFF3B82F6),
-            shadowElevation = 0.dp,
-            shape = RoundedCornerShape(bottomStart = 40.dp, bottomEnd = 40.dp)
-        ) {}
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(bottom = 72.dp) // space untuk bottom nav
                 .verticalScroll(rememberScrollState())
         ) {
-            // Top bar
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 14.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(onClick = { /* TODO: open drawer */ }) {
-                    Icon(
-                        imageVector = Icons.Filled.Menu,
-                        contentDescription = "Menu",
-                        tint = Color.White
-                    )
-                }
-
-                Spacer(modifier = Modifier.weight(1f))
-
-                Text(
-                    text = "Edit",
-                    color = Color.White,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 14.sp
-                )
-            }
-
-            // Avatar + nama + email + badge
+            // Blue gradient header with rounded bottom
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 8.dp),
-                contentAlignment = Alignment.TopCenter
+                    .height(240.dp)
             ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally
+                // Background blue gradient
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(240.dp),
+                    color = Color(0xFF5B8DEF), // Blue color matching reference
+                    shadowElevation = 0.dp,
+                    shape = RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp)
                 ) {
-                    // AVATAR: pakai foto profil
-                    Box(
+                    // Top bar inside blue header
+                    Row(
                         modifier = Modifier
-                            .size(100.dp)
-                            .clip(CircleShape)
-                            .background(Color(0xFF2563EB)),
-                        contentAlignment = Alignment.Center
+                            .fillMaxWidth()
+                            .padding(horizontal = 20.dp, vertical = 16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Image(
-                            painter = painterResource(id = R.drawable.foto_irfan),
-                            contentDescription = "Foto Profil",
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier.fillMaxSize()
+                        IconButton(onClick = { /* TODO: open drawer */ }) {
+                            Icon(
+                                imageVector = Icons.Filled.Menu,
+                                contentDescription = "Menu",
+                                tint = Color.White
+                            )
+                        }
+
+                        Text(
+                            text = "Edit",
+                            color = Color.White,
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 15.sp,
+                            modifier = Modifier.clickable { /* TODO: edit profile */ }
                         )
                     }
+                }
+            }
 
-                    // Badge ceklis
+            // Profile content with offset to overlap header
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .offset(y = (-100).dp)
+                    .padding(horizontal = 24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Profile photo with green checkmark badge
+                Box(
+                    contentAlignment = Alignment.BottomEnd
+                ) {
+                    // Avatar circle
                     Box(
                         modifier = Modifier
-                            .offset(y = (-12).dp)
+                            .size(120.dp)
                             .clip(CircleShape)
-                            .background(Color(0xFF22C55E))
+                            .background(Color.White)
                             .padding(4.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .clip(CircleShape)
+                                .background(Color(0xFF4B6CB7)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Image(
+                                painter = painterResource(id = R.drawable.foto_irfan),
+                                contentDescription = "Profile Photo",
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        }
+                    }
+
+                    // Green checkmark badge
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFF4ADE80))
+                            .padding(2.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = "✓",
                             color = Color.White,
-                            fontSize = 12.sp,
+                            fontSize = 16.sp,
                             fontWeight = FontWeight.Bold
                         )
                     }
+                }
 
-                    Spacer(modifier = Modifier.height(2.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
-                    // Nama & email diberi padding horizontal biar tidak kepotong
-                    Text(
-                        text = uiState.userName.uppercase(),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier
-                            .padding(horizontal = 24.dp)
+                // Name - uppercase
+                Text(
+                    text = uiState.userName.uppercase(),
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF1F2937)
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                // Email
+                Text(
+                    text = uiState.userEmail,
+                    fontSize = 13.sp,
+                    color = Color(0xFF6B7280)
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Stats chips (jobs completed + rating)
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    StatChip(
+                        label = "Jobs selesai",
+                        value = "${uiState.totalJobsCompleted}"
                     )
-
-                    Text(
-                        text = uiState.userEmail,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier
-                            .padding(horizontal = 24.dp)
+                    StatChip(
+                        label = "Rating",
+                        value = "%.1f★".format(uiState.neighborRating)
                     )
+                }
 
-                    Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(20.dp))
 
-                    // Statistik gamifikasi singkat (jobs + rating)
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        StatChip(
-                            label = "Jobs selesai",
-                            value = "${uiState.totalJobsCompleted}"
+                // Gamification card (Level + XP)
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color.White
+                    ),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(
+                            horizontal = 18.dp,
+                            vertical = 16.dp
                         )
-                        StatChip(
-                            label = "Rating tetangga",
-                            value = "%.1f★".format(uiState.neighborRating)
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // CARD GAMIFIKASI (Level + XP)
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 20.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = Color.White
-                        ),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
-                        shape = RoundedCornerShape(18.dp)
                     ) {
-                        Column(
-                            modifier = Modifier.padding(
-                                horizontal = 16.dp,
-                                vertical = 14.dp
-                            )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text(
-                                text = "Progress Tetangga Baik",
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.SemiBold
-                            )
-
-                            Spacer(modifier = Modifier.height(8.dp))
-
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Column {
-                                    Text(
-                                        text = "Level ${uiState.level}",
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 16.sp
-                                    )
-                                    Text(
-                                        text = "${uiState.currentXp} / ${uiState.nextLevelXp} XP",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-
-                                Surface(
-                                    shape = RoundedCornerShape(999.dp),
-                                    color = Color(0xFFEEF2FF)
-                                ) {
-                                    Text(
-                                        text = "Badge: ${uiState.badge}",
-                                        color = Color(0xFF4F46E5),
-                                        fontSize = 11.sp,
-                                        fontWeight = FontWeight.SemiBold,
-                                        modifier = Modifier
-                                            .padding(horizontal = 10.dp, vertical = 4.dp)
-                                    )
-                                }
+                            Column {
+                                Text(
+                                    text = "Level ${uiState.level}",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 18.sp,
+                                    color = Color(0xFF1F2937)
+                                )
+                                Text(
+                                    text = "${uiState.currentXp} / ${uiState.nextLevelXp} XP",
+                                    fontSize = 13.sp,
+                                    color = Color(0xFF6B7280)
+                                )
                             }
 
-                            Spacer(modifier = Modifier.height(10.dp))
-
-                            LinearProgressIndicator(
-                                progress = xpProgress,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(6.dp)
-                                    .clip(RoundedCornerShape(999.dp)),
-                                trackColor = Color(0xFFE5E7EB),
-                                color = Color(0xFF4ADE80)
-                            )
-
-                            Spacer(modifier = Modifier.height(6.dp))
-
-                            Text(
-                                text = "Selesaikan lebih banyak job untuk naik ke Level ${uiState.level + 1}.",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                            // Badge pill
+                            Surface(
+                                shape = RoundedCornerShape(999.dp),
+                                color = Color(0xFFDEEAFF)
+                            ) {
+                                Text(
+                                    text = uiState.badge,
+                                    color = Color(0xFF5B8DEF),
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    modifier = Modifier.padding(
+                                        horizontal = 12.dp,
+                                        vertical = 6.dp
+                                    )
+                                )
+                            }
                         }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        // Progress bar
+                        LinearProgressIndicator(
+                            progress = xpProgress,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(6.dp)
+                                .clip(RoundedCornerShape(999.dp)),
+                            trackColor = Color(0xFFE5E7EB),
+                            color = Color(0xFF5B8DEF)
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Text(
+                            text = "Selesaikan lebih banyak job untuk naik level",
+                            fontSize = 12.sp,
+                            color = Color(0xFF9CA3AF)
+                        )
                     }
-
-                    Spacer(modifier = Modifier.height(20.dp))
                 }
-            }
 
-            // Card menu utama
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = Color.White
-                ),
-                elevation = CardDefaults.cardElevation(
-                    defaultElevation = 4.dp
-                ),
-                shape = RoundedCornerShape(20.dp)
-            ) {
-                Column {
-                    ProfileMenuItem(
-                        icon = Icons.Filled.Person,
-                        iconTint = Color(0xFF3B82F6),
-                        title = "My Profile",
-                        badgeCount = null,
-                        onClick = onMyProfileClick
-                    )
+                Spacer(modifier = Modifier.height(20.dp))
 
-                    Divider(color = Color(0xFFE5E7EB))
+                // Menu items in white card
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color.White
+                    ),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        // My Profile
+                        MenuItemRow(
+                            icon = Icons.Filled.Person,
+                            title = "My Profile",
+                            onClick = onMyProfileClick,
+                            showArrow = true
+                        )
 
-                    ProfileMenuItem(
-                        icon = Icons.Filled.Email,
-                        iconTint = Color(0xFF3B82F6),
-                        title = "Messages",
-                        badgeCount = uiState.unreadMessages,
-                        onClick = {
-                            viewModel.markMessagesAsRead()
-                            onMessagesClick()
-                        }
-                    )
+                        Divider(color = Color(0xFFF3F4F6), thickness = 1.dp)
 
-                    Divider(color = Color(0xFFE5E7EB))
+                        // Messages with badge
+                        MenuItemRow(
+                            icon = Icons.Filled.Email,
+                            title = "Messages",
+                            onClick = {
+                                viewModel.markMessagesAsRead()
+                                onMessagesClick()
+                            },
+                            badgeCount = uiState.unreadMessages,
+                            showArrow = false
+                        )
 
-                    ProfileMenuItem(
-                        icon = Icons.Filled.Settings,
-                        iconTint = Color(0xFF3B82F6),
-                        title = "Settings",
-                        badgeCount = null,
-                        onClick = onSettingsClick
-                    )
+                        Divider(color = Color(0xFFF3F4F6), thickness = 1.dp)
 
-                    Divider(color = Color(0xFFE5E7EB))
+                        // Settings
+                        MenuItemRow(
+                            icon = Icons.Filled.Settings,
+                            title = "Settings",
+                            onClick = onSettingsClick,
+                            showArrow = true
+                        )
 
-                    ProfileMenuItem(
-                        icon = Icons.Filled.Info,
-                        iconTint = Color(0xFF3B82F6),
-                        title = "Terms & Privacy Policy",
-                        badgeCount = null,
-                        onClick = onTermsClick
-                    )
+                        Divider(color = Color(0xFFF3F4F6), thickness = 1.dp)
+
+                        // Terms & Privacy Policy
+                        MenuItemRow(
+                            icon = Icons.Filled.Info,
+                            title = "Terms & Privacy Policy",
+                            onClick = onTermsClick,
+                            showArrow = true
+                        )
+                    }
                 }
-            }
 
-            Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(24.dp))
 
-            // Tombol Logout
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp),
-                contentAlignment = Alignment.Center
-            ) {
+                // Logout button
                 Row(
-                    verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
-                        .clip(RoundedCornerShape(999.dp))
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
                         .background(Color.White)
                         .clickable { onLogout() }
-                        .padding(horizontal = 16.dp, vertical = 10.dp)
+                        .padding(horizontal = 16.dp, vertical = 14.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
                         imageVector = Icons.Filled.ExitToApp,
                         contentDescription = "Logout",
-                        tint = Color(0xFF9CA3AF)
+                        tint = Color(0xFF9CA3AF),
+                        modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "Logout",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Color(0xFF9CA3AF)
+                        color = Color(0xFF9CA3AF),
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Medium
                     )
                 }
-            }
 
-            Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(100.dp)) // Space for bottom nav
+            }
         }
 
-        // Bottom navigation seperti di Home
-        Surface(
+        // Bottom navigation - unified component
+        BottomNavigationBar(
+            modifier = Modifier.align(Alignment.BottomCenter),
+            selectedTab = selectedTab,
+            onHomeClick = onHomeClick,
+            onJobsClick = onJobClick,
+            onChatClick = onChatClick,
+            onProfileClick = { /* Already on profile */ }
+        )
+    }
+}
+
+/**
+ * Menu item row component
+ */
+@Composable
+private fun MenuItemRow(
+    icon: ImageVector,
+    title: String,
+    onClick: () -> Unit,
+    badgeCount: Int = 0,
+    showArrow: Boolean = false
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
+            .padding(horizontal = 20.dp, vertical = 16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Icon with light blue background
+        Box(
             modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth(),
-            color = Color.White,
-            shadowElevation = 8.dp
+                .size(40.dp)
+                .clip(RoundedCornerShape(10.dp))
+                .background(Color(0xFFE0EAFF)),
+            contentAlignment = Alignment.Center
         ) {
-            Row(
+            Icon(
+                imageVector = icon,
+                contentDescription = title,
+                tint = Color(0xFF5B8DEF),
+                modifier = Modifier.size(20.dp)
+            )
+        }
+
+        Spacer(modifier = Modifier.width(16.dp))
+
+        // Title
+        Text(
+            text = title,
+            fontSize = 15.sp,
+            color = Color(0xFF1F2937),
+            fontWeight = FontWeight.Normal,
+            modifier = Modifier.weight(1f)
+        )
+
+        // Badge or arrow
+        if (badgeCount > 0) {
+            Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                    .size(24.dp)
+                    .clip(CircleShape)
+                    .background(Color(0xFF4ADE80)),
+                contentAlignment = Alignment.Center
             ) {
-                BottomNavItemProfile(
-                    icon = Icons.Filled.Home,
-                    label = "Beranda",
-                    selected = selectedTabState.value == HomeTab.BERANDA,
-                    onClick = {
-                        selectedTabState.value = HomeTab.BERANDA
-                        onHomeClick()
-                    }
-                )
-
-                BottomNavItemProfile(
-                    icon = Icons.Filled.List,
-                    label = "Job Saya",
-                    selected = selectedTabState.value == HomeTab.JOB_SAYA,
-                    onClick = {
-                        selectedTabState.value = HomeTab.JOB_SAYA
-                        onJobClick()
-                    }
-                )
-
-                BottomNavItemProfile(
-                    icon = Icons.Filled.Person,
-                    label = "Profil",
-                    selected = selectedTabState.value == HomeTab.PROFIL,
-                    onClick = {
-                        selectedTabState.value = HomeTab.PROFIL
-                        // sudah di profil
-                    }
+                Text(
+                    text = badgeCount.toString(),
+                    color = Color.White,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.SemiBold
                 )
             }
+        } else if (showArrow) {
+            Text(
+                text = "›",
+                color = Color(0xFF9CA3AF),
+                fontSize = 20.sp
+            )
         }
     }
 }
@@ -543,13 +585,6 @@ fun ProfileScreenPreview() {
             onHomeClick = {},
             onJobClick = {},
             onLogout = {},
-            userName = "Irfan Zidni",
-            userEmail = "irfan@example.com",
-            totalJobsCompleted = 12,
-            neighborRating = 4.8,
-            level = 3,
-            currentXp = 1250,
-            nextLevelXp = 2000,
             onMyProfileClick = {},
             onMessagesClick = {},
             onSettingsClick = {},
@@ -557,4 +592,5 @@ fun ProfileScreenPreview() {
         )
     }
 }
+
 

@@ -39,12 +39,12 @@ fun RegisterScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFEFF2FF))
+            .background(Color.White) // Clean white background
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 24.dp),
+                .padding(horizontal = 32.dp),
         ) {
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -55,35 +55,37 @@ fun RegisterScreen(
             ) {
                 Icon(
                     imageVector = Icons.Default.ArrowBack,
-                    contentDescription = "Back"
+                    contentDescription = "Back",
+                    tint = Color(0xFF374151)
                 )
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Logo text
+                // Logo - matching AuthScreen
                 Text(
                     text = "TetanggaKu",
-                    fontSize = 24.sp,
+                    fontSize = 32.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF1E40AF),
-                    letterSpacing = 1.sp
+                    color = Color(0xFF1E3A8A),
+                    letterSpacing = 0.5.sp
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(32.dp))
 
                 Text(
                     text = "Create your Account",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Normal,
+                    color = Color(0xFF374151),
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(24.dp))
 
                 // Error message
                 if (uiState.errorMessage != null) {
@@ -93,7 +95,8 @@ fun RegisterScreen(
                             .padding(bottom = 12.dp),
                         colors = CardDefaults.cardColors(
                             containerColor = Color(0xFFFFEBEE)
-                        )
+                        ),
+                        shape = RoundedCornerShape(8.dp)
                     ) {
                         Row(
                             modifier = Modifier
@@ -120,77 +123,114 @@ fun RegisterScreen(
                     }
                 }
 
+                // Form name
                 OutlinedTextField(
                     value = uiState.name,
                     onValueChange = { viewModel.onNameChange(it) },
-                    label = { Text("Name") },
-                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text("Name", fontSize = 14.sp) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
                     singleLine = true,
-                    enabled = !uiState.isLoading
+                    enabled = !uiState.isLoading,
+                    shape = RoundedCornerShape(8.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color(0xFF1E3A8A),
+                        unfocusedBorderColor = Color(0xFFE5E7EB)
+                    )
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
 
+                // Form email
                 OutlinedTextField(
                     value = uiState.email,
                     onValueChange = { viewModel.onEmailChange(it) },
-                    label = { Text("Email") },
-                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text("Email", fontSize = 14.sp) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
                     singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                     enabled = !uiState.isLoading,
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Email
+                    shape = RoundedCornerShape(8.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color(0xFF1E3A8A),
+                        unfocusedBorderColor = Color(0xFFE5E7EB)
                     )
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
 
+                // Form phone
                 OutlinedTextField(
                     value = uiState.phone,
                     onValueChange = { viewModel.onPhoneChange(it) },
-                    label = { Text("Phone Number") },
-                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text("Phone", fontSize = 14.sp) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
                     singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                     enabled = !uiState.isLoading,
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Phone
+                    shape = RoundedCornerShape(8.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color(0xFF1E3A8A),
+                        unfocusedBorderColor = Color(0xFFE5E7EB)
                     )
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
 
+                // Form password
                 OutlinedTextField(
                     value = uiState.password,
                     onValueChange = { viewModel.onPasswordChange(it) },
-                    label = { Text("Password") },
-                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text("Password", fontSize = 14.sp) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
                     singleLine = true,
                     visualTransformation = PasswordVisualTransformation(),
-                    enabled = !uiState.isLoading
+                    enabled = !uiState.isLoading,
+                    shape = RoundedCornerShape(8.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color(0xFF1E3A8A),
+                        unfocusedBorderColor = Color(0xFFE5E7EB)
+                    )
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
 
+                // Form confirm password
                 OutlinedTextField(
                     value = uiState.confirmPassword,
                     onValueChange = { viewModel.onConfirmPasswordChange(it) },
-                    label = { Text("Confirm Password") },
-                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text("Confirm Password", fontSize = 14.sp) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
                     singleLine = true,
                     visualTransformation = PasswordVisualTransformation(),
-                    enabled = !uiState.isLoading
+                    enabled = !uiState.isLoading,
+                    shape = RoundedCornerShape(8.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color(0xFF1E3A8A),
+                        unfocusedBorderColor = Color(0xFFE5E7EB)
+                    )
                 )
 
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(24.dp))
 
+                // Tombol Sign up
                 Button(
                     onClick = { viewModel.register() },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(48.dp),
-                    shape = RoundedCornerShape(12.dp),
+                        .height(52.dp),
+                    shape = RoundedCornerShape(8.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF1E40AF),
+                        containerColor = Color(0xFF1E3A8A),
                         contentColor = Color.White
                     ),
                     enabled = !uiState.isLoading
@@ -205,38 +245,39 @@ fun RegisterScreen(
                         Text(
                             text = "Sign up",
                             fontSize = 16.sp,
-                            fontWeight = FontWeight.SemiBold
+                            fontWeight = FontWeight.Medium
                         )
                     }
                 }
 
                 Spacer(modifier = Modifier.height(20.dp))
 
-                // Divider "Or sign up with"
+                // Divider
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Divider(
                         modifier = Modifier.weight(1f),
-                        color = Color(0xFFDFE3F0)
+                        color = Color(0xFFE5E7EB)
                     )
                     Text(
-                        text = "  Or sign up with  ",
+                        text = "  -Or sign up with-  ",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = Color(0xFF9CA3AF),
+                        fontSize = 12.sp
                     )
                     Divider(
                         modifier = Modifier.weight(1f),
-                        color = Color(0xFFDFE3F0)
+                        color = Color(0xFFE5E7EB)
                     )
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(20.dp))
 
-                // Tombol sosial pakai logo (pakai SocialCircleButton dari AuthScreen)
+                // Social buttons
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(20.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.align(Alignment.CenterHorizontally)
                 ) {
