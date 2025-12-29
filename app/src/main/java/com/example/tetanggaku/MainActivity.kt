@@ -37,6 +37,9 @@ sealed class Screen(val route: String) {
     object HelperProfile : Screen("helper_profile/{helperId}") {
         fun createRoute(helperId: String) = "helper_profile/$helperId"
     }
+    object MyProfileDetail : Screen("my_profile_detail")
+    object Settings : Screen("settings")
+    object TermsPrivacy : Screen("terms_privacy")
 }
 
 class MainActivity : ComponentActivity() {
@@ -178,6 +181,18 @@ fun TetanggakuApp() {
                 },
                 onMyPostedJobsClick = {
                     navController.navigate(Screen.MyPostedJobs.route)
+                },
+                onMyProfileClick = {
+                    navController.navigate(Screen.MyProfileDetail.route)
+                },
+                onMessagesClick = {
+                    navController.navigate(Screen.Chat.route)
+                },
+                onSettingsClick = {
+                    navController.navigate(Screen.Settings.route)
+                },
+                onTermsClick = {
+                    navController.navigate(Screen.TermsPrivacy.route)
                 }
             )
         }
@@ -374,6 +389,37 @@ fun TetanggakuApp() {
                 onContactClick = {
                     navController.navigate(Screen.Chat.route)
                 }
+            )
+        }
+        
+        // =======================
+        // My Profile Detail
+        // =======================
+        composable(route = Screen.MyProfileDetail.route) {
+            MyProfileDetailScreen(
+                onBack = { navController.popBackStack() },
+                onEditProfile = {
+                    // Could navigate back to Profile or show edit dialog
+                    navController.popBackStack()
+                }
+            )
+        }
+        
+        // =======================
+        // Settings
+        // =======================
+        composable(route = Screen.Settings.route) {
+            SettingsScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
+        
+        // =======================
+        // Terms & Privacy
+        // =======================
+        composable(route = Screen.TermsPrivacy.route) {
+            TermsPrivacyScreen(
+                onBack = { navController.popBackStack() }
             )
         }
     }

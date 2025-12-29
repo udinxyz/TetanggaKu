@@ -47,6 +47,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.tetanggaku.ui.theme.TetanggakuTheme
 import com.example.tetanggaku.R
 import com.example.tetanggaku.presentation.components.BottomNavigationBar
+import com.example.tetanggaku.presentation.components.EditProfileDialog
+import com.example.tetanggaku.presentation.components.ProfileDrawerContent
 import com.example.tetanggaku.presentation.viewmodels.ProfileViewModel
 import com.example.tetanggaku.presentation.viewmodels.HomeTab
 import com.example.tetanggaku.presentation.viewmodels.Badge
@@ -54,6 +56,11 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.ThumbUp
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
+import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.rememberDrawerState
 
 @Composable
 fun ProfileScreen(
@@ -72,17 +79,37 @@ fun ProfileScreen(
     val uiState by viewModel.uiState.collectAsState()
     val selectedTabState = remember { mutableStateOf(HomeTab.PROFILE) }
     val xpProgress = viewModel.getXpProgress()
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFFF5F5F5)) // Light gray background
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+            ProfileDrawerContent(
+                userName = uiState.userName,
+                userEmail = uiState.userEmail,
+                userTitle = uiState.userTitle,
+                onHomeClick = onHomeClick,
+                onMyJobsClick = onMyPostedJobsClick,
+                onSettingsClick = onSettingsClick,
+                onHelpClick = onTermsClick,
+                onLogout = onLogout,
+                onClose = { 
+                    scope.launch { drawerState.close() }
+                }
+            )
+        }
     ) {
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
+                .background(Color(0xFFF5F5F5)) // Light gray background
         ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+            ) {
             // Blue gradient header with rounded bottom
             Box(
                 modifier = Modifier
@@ -106,7 +133,9 @@ fun ProfileScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        IconButton(onClick = { /* TODO: open drawer */ }) {
+                        IconButton(onClick = { 
+                            scope.launch { drawerState.open() }
+                        }) {
                             Icon(
                                 imageVector = Icons.Filled.Menu,
                                 contentDescription = "Menu",
@@ -119,7 +148,7 @@ fun ProfileScreen(
                             color = Color.White,
                             fontWeight = FontWeight.Medium,
                             fontSize = 15.sp,
-                            modifier = Modifier.clickable { /* TODO: edit profile */ }
+                            modifier = Modifier.clickable { viewModel.showEditDialog() }
                         )
                     }
                 }
@@ -437,6 +466,21 @@ fun ProfileScreen(
             onChatClick = onChatClick,
             onProfileClick = { /* Already on profile */ }
         )
+        }
+    }
+    
+    // Edit Profile Dialog
+    if (uiState.showEditDialog) {
+        EditProfileDialog(
+            currentName = uiState.userName,
+            currentEmail = uiState.userEmail,
+            isUpdating = uiState.isUpdatingProfile,
+            onDismiss = { viewModel.hideEditDialog() },
+            onSave = { name, email ->
+                viewModel.updateUserName(name)
+                viewModel.updateUserEmail(email)
+            }
+        )
     }
 }
 
@@ -599,6 +643,7 @@ private fun ProfileMenuItem(
         }
     }
 }
+
 
 @Composable
 private fun BottomNavItemProfile(
