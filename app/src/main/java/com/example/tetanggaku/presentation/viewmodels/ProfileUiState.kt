@@ -23,5 +23,7 @@ data class ProfileUiState(
     val badges: List<Badge> = emptyList(), // Koleksi achievement badges
     val unreadMessages: Int = 0,
     val isLoading: Boolean = false,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val showEditDialog: Boolean = false,
+    val isUpdatingProfile: Boolean = false
 )

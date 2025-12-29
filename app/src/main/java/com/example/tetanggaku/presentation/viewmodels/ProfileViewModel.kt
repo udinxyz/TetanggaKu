@@ -140,4 +140,38 @@ class ProfileViewModel : ViewModel() {
     fun clearError() {
         _uiState.update { it.copy(errorMessage = null) }
     }
+    
+    fun showEditDialog() {
+        _uiState.update { it.copy(showEditDialog = true) }
+    }
+    
+    fun hideEditDialog() {
+        _uiState.update { it.copy(showEditDialog = false) }
+    }
+    
+    fun updateUserEmail(newEmail: String) {
+        viewModelScope.launch {
+            try {
+                _uiState.update { it.copy(isUpdatingProfile = true) }
+                
+                // TODO: Implementasi update email ke API
+                // val result = profileRepository.updateUserEmail(newEmail)
+                
+                _uiState.update { 
+                    it.copy(
+                        userEmail = newEmail,
+                        isUpdatingProfile = false,
+                        showEditDialog = false
+                    ) 
+                }
+            } catch (e: Exception) {
+                _uiState.update { 
+                    it.copy(
+                        errorMessage = "Gagal mengupdate email",
+                        isUpdatingProfile = false
+                    ) 
+                }
+            }
+        }
+    }
 }
