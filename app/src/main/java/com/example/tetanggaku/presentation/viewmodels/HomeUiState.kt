@@ -17,6 +17,9 @@ data class HomeUiState(
     
     // Service Categories
     val serviceCategories: List<ServiceCategory> = emptyList(),
+
+    // Daily Missions
+    val dailyMissions: List<DailyMission> = emptyList(),
     
     // Location
     val currentLocation: String = "San Antonio, TX",
@@ -54,4 +57,11 @@ data class ServiceCategory(
     val id: String,
     val name: String,
     val iconName: String // We'll use this to determine which icon to show
+)
+
+data class DailyMission(
+    val id: String,
+    val title: String,
+    val xpReward: Int,
+    val isCompleted: Boolean = false
 )

@@ -49,6 +49,11 @@ import com.example.tetanggaku.R
 import com.example.tetanggaku.presentation.components.BottomNavigationBar
 import com.example.tetanggaku.presentation.viewmodels.ProfileViewModel
 import com.example.tetanggaku.presentation.viewmodels.HomeTab
+import com.example.tetanggaku.presentation.viewmodels.Badge
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.ThumbUp
 
 @Composable
 fun ProfileScreen(
@@ -61,6 +66,7 @@ fun ProfileScreen(
     onMessagesClick: () -> Unit = {},
     onSettingsClick: () -> Unit = {},
     onTermsClick: () -> Unit = {},
+    onMyPostedJobsClick: () -> Unit = {},
     viewModel: ProfileViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -184,6 +190,16 @@ fun ProfileScreen(
                     color = Color(0xFF1F2937)
                 )
 
+                Spacer(modifier = Modifier.height(2.dp))
+
+                // Title (Gelar) - NEW
+                Text(
+                    text = uiState.userTitle,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color(0xFF5B8DEF)
+                )
+
                 Spacer(modifier = Modifier.height(4.dp))
 
                 // Email
@@ -289,6 +305,31 @@ fun ProfileScreen(
 
                 Spacer(modifier = Modifier.height(20.dp))
 
+                // Badges Section
+                Text(
+                    text = "Koleksi Lencana",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF1F2937),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 12.dp)
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    uiState.badges.forEach { badge ->
+                        BadgeItem(
+                            badge = badge,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
+
                 // Menu items in white card
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -321,6 +362,16 @@ fun ProfileScreen(
                             },
                             badgeCount = uiState.unreadMessages,
                             showArrow = false
+                        )
+
+                        Divider(color = Color(0xFFF3F4F6), thickness = 1.dp)
+
+                        // My Posted Jobs (Requester)
+                        MenuItemRow(
+                            icon = Icons.Filled.List,
+                            title = "Job Saya (Pemberi)",
+                            onClick = onMyPostedJobsClick,
+                            showArrow = true
                         )
 
                         Divider(color = Color(0xFFF3F4F6), thickness = 1.dp)
@@ -589,6 +640,58 @@ fun ProfileScreenPreview() {
             onMessagesClick = {},
             onSettingsClick = {},
             onTermsClick = {}
+        )
+    }
+}
+
+@Composable
+private fun BadgeItem(
+    badge: Badge,
+    modifier: Modifier = Modifier
+) {
+    val icon = when (badge.iconName) {
+        "home" -> Icons.Filled.Home
+        "rocket" -> Icons.Filled.ThumbUp // Replacement for Rocket
+        "star" -> Icons.Filled.Star
+        "heart" -> Icons.Filled.Favorite
+        "wallet" -> Icons.Filled.ShoppingCart // Replacement for Wallet
+        else -> Icons.Filled.Star
+    }
+    
+    val backgroundColor = if (badge.isUnlocked) Color(0xFFEFF6FF) else Color(0xFFF3F4F6)
+    val iconColor = if (badge.isUnlocked) Color(0xFF3B82F6) else Color(0xFF9CA3AF)
+    val textColor = if (badge.isUnlocked) Color(0xFF1F2937) else Color(0xFF9CA3AF)
+    
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Box(
+            modifier = Modifier
+                .size(64.dp)
+                .clip(CircleShape)
+                .background(backgroundColor)
+                .padding(12.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = badge.name,
+                tint = iconColor,
+                modifier = Modifier.size(32.dp)
+            )
+        }
+        
+        Spacer(modifier = Modifier.height(8.dp))
+        
+        Text(
+            text = badge.name,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Medium,
+            color = textColor,
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
         )
     }
 }

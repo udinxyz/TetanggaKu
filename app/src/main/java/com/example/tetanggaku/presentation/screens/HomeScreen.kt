@@ -1,6 +1,7 @@
 package com.example.tetanggaku.presentation.screens
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -52,6 +53,7 @@ fun HomeScreen(
     onLocationClick: () -> Unit = {},
     onNotificationClick: () -> Unit = {},
     onCategoryClick: (String) -> Unit = {},
+    onAiClick: () -> Unit = {},
     viewModel: HomeViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -60,7 +62,7 @@ fun HomeScreen(
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { viewModel.showAiSheet() },
+                onClick = onAiClick,
                 containerColor = TealPrimary,
                 contentColor = Color.White,
                 shape = RoundedCornerShape(20.dp)
@@ -259,6 +261,14 @@ private fun HomeBerandaContent(
 
             // Hero Banner (Teal)
             HeroBanner(onCreateJobClick = onCreateJobClick)
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Daily Missions Section
+            DailyMissionsSection(
+                missions = uiState.dailyMissions,
+                onMissionClick = { /* Can handle detailed view */ }
+            )
 
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -1022,3 +1032,105 @@ private fun HomeJobSayaContent(
     }
 }
 
+// =====================
+// Daily Missions Section
+// =====================
+@Composable
+private fun DailyMissionsSection(
+    missions: List<DailyMission>,
+    onMissionClick: (DailyMission) -> Unit
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        // Header
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Filled.DateRange,
+                contentDescription = null,
+                tint = Color(0xFFF59E0B),
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "Misi Hari Ini",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF1F2937)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // Horizontal scroll for missions
+        LazyRow(
+            contentPadding = PaddingValues(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            items(missions) { mission ->
+                DailyMissionItem(mission = mission)
+            }
+        }
+    }
+}
+
+@Composable
+private fun DailyMissionItem(mission: DailyMission) {
+    Card(
+        modifier = Modifier.width(160.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        shape = RoundedCornerShape(12.dp),
+        border = if (mission.isCompleted) BorderStroke(1.dp, Color(0xFF4ADE80)) else null
+    ) {
+        Column(
+            modifier = Modifier.padding(12.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // XP Badge
+                Surface(
+                    shape = RoundedCornerShape(4.dp),
+                    color = Color(0xFFEFF6FF)
+                ) {
+                    Text(
+                        text = "+${mission.xpReward} XP",
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF3B82F6),
+                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+                    )
+                }
+
+                if (mission.isCompleted) {
+                    Icon(
+                        imageVector = Icons.Filled.CheckCircle,
+                        contentDescription = "Completed",
+                        tint = Color(0xFF4ADE80),
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            Text(
+                text = mission.title,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Medium,
+                color = if (mission.isCompleted) Color(0xFF9CA3AF) else Color(0xFF1F2937),
+                maxLines = 2,
+                minLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+    }
+}

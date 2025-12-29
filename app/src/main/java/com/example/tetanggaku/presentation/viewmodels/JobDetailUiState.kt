@@ -20,5 +20,15 @@ data class JobDetailUiState(
     val xpReward: Int = 50,
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
-    val isJobTaken: Boolean = false
+    val isJobTaken: Boolean = false,
+    val showConfirmDialog: Boolean = false,
+    val showCompleteDialog: Boolean = false,
+    val showRatingDialog: Boolean = false,
+    val isTakingJob: Boolean = false,
+    val isMarkingComplete: Boolean = false,
+    val userRating: Int = 0,
+    val userReview: String = "",
+    val successMessage: String? = null,
+    val isJobCompleted: Boolean = false,
+    val isWaitingConfirmation: Boolean = false
 )

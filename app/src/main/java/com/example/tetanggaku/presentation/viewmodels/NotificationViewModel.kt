@@ -30,22 +30,38 @@ class NotificationViewModel : ViewModel() {
                 val notifications = listOf(
                     Notification(
                         id = "n1",
-                        title = "New job available!",
-                        message = "Someone needs help with house cleaning nearby",
+                        title = "Job Completed! ✓",
+                        message = "Helper Budi Santoso has completed 'Bantu Angkat Lemari'. Tap to confirm.",
                         timestamp = "5 min ago",
                         isRead = false,
-                        type = NotificationType.JOB_UPDATE
+                        type = NotificationType.JOB_COMPLETED
                     ),
                     Notification(
                         id = "n2",
-                        title = "Job completed",
-                        message = "Your job 'Titip beli obat' has been completed",
-                        timestamp = "2 hours ago",
+                        title = "Job Taken",
+                        message = "Siti Aminah accepted your job 'Titip Beli di Alfamart'",
+                        timestamp = "1 hour ago",
                         isRead = false,
-                        type = NotificationType.JOB_UPDATE
+                        type = NotificationType.JOB_TAKEN
                     ),
                     Notification(
                         id = "n3",
+                        title = "New Applicant",
+                        message = "3 people want to take your job 'Jaga Rumah Sementara'",
+                        timestamp = "2 hours ago",
+                        isRead = true,
+                        type = NotificationType.APPLICANT_NEW
+                    ),
+                    Notification(
+                        id = "n4",
+                        title = "New job available!",
+                        message = "Someone needs help nearby: Help with moving furniture",
+                        timestamp = "Yesterday",
+                        isRead = true,
+                        type = NotificationType.JOB_UPDATE
+                    ),
+                    Notification(
+                        id = "n5",
                         title = "New message",
                         message = "Pak Budi sent you a message",
                         timestamp = "Yesterday",
@@ -53,7 +69,7 @@ class NotificationViewModel : ViewModel() {
                         type = NotificationType.CHAT_MESSAGE
                     ),
                     Notification(
-                        id = "n4",
+                        id = "n6",
                         title = "Welcome to TetanggaKu!",
                         message = "Complete your profile to get started",
                         timestamp = "2 days ago",

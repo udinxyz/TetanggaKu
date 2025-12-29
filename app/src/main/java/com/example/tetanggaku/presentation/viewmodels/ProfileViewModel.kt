@@ -34,12 +34,21 @@ class ProfileViewModel : ViewModel() {
                     it.copy(
                         userName = "Udinxyz",
                         userEmail = "udinxyz@example.com",
+                        userTitle = "Tetangga Teladan", // Level 4 Title
                         totalJobsCompleted = 12,
                         neighborRating = 4.8,
                         level = 4,
                         currentXp = 1250,
                         nextLevelXp = 2000,
+
                         badge = "Tetangga Aktif",
+                        badges = listOf(
+                            Badge("1", "Warga Baru", "Bergabung dengan TetanggaKu", "home", true),
+                            Badge("2", "Si Gercep", "Merespon job dalam 5 menit", "rocket", true),
+                            Badge("3", "Bintang 5", "Mendapatkan rating 5.0 pertama", "star", true),
+                            Badge("4", "Dermawan", "Membantu 50 tetangga", "heart", false),
+                            Badge("5", "Sultan", "Total penghasilan 1 juta", "wallet", false)
+                        ),
                         unreadMessages = 2,
                         isLoading = false
                     )
@@ -88,12 +97,14 @@ class ProfileViewModel : ViewModel() {
                 val remainingXp = newXp - currentState.nextLevelXp
                 val newLevel = currentState.level + 1
                 val newNextLevelXp = calculateNextLevelXp(newLevel)
+                val newTitle = getTitleForLevel(newLevel)
                 
                 _uiState.update {
                     it.copy(
                         level = newLevel,
                         currentXp = remainingXp,
-                        nextLevelXp = newNextLevelXp
+                        nextLevelXp = newNextLevelXp,
+                        userTitle = newTitle
                     )
                 }
                 
@@ -101,6 +112,18 @@ class ProfileViewModel : ViewModel() {
             } else {
                 _uiState.update { it.copy(currentXp = newXp) }
             }
+        }
+    }
+    
+    private fun getTitleForLevel(level: Int): String {
+        return when (level) {
+            1 -> "Warga Baru"
+            2 -> "Tetangga Ramah"
+            3 -> "Tetangga Peduli"
+            4 -> "Tetangga Teladan"
+            5 -> "Sesepuh Komplek"
+            in 6..10 -> "Pahlawan Lokal"
+            else -> "Legenda"
         }
     }
     

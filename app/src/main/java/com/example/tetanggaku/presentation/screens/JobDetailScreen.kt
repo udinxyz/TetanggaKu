@@ -12,6 +12,7 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.*
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -23,6 +24,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -41,24 +43,37 @@ fun JobDetailScreen(
     viewModel: JobDetailViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
     
     // Load job detail saat screen dibuka
     LaunchedEffect(jobId) {
         viewModel.loadJobDetail(jobId)
     }
     
-    // Navigate back saat job berhasil diambil
-    LaunchedEffect(uiState.isJobTaken) {
-        if (uiState.isJobTaken) {
-            onTakeJob()
+    // Show success message
+    LaunchedEffect(uiState.successMessage) {
+        uiState.successMessage?.let {
+            snackbarHostState.showSnackbar(it)
+            viewModel.clearSuccessMessage()
         }
     }
     
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFFF3F6F7))
-    ) {
+    // Show error message
+    LaunchedEffect(uiState.errorMessage) {
+        uiState.errorMessage?.let {
+            snackbarHostState.showSnackbar(it)
+            viewModel.clearError()
+        }
+    }
+    
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) }
+    ) { _ ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0xFFF3F6F7))
+        ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -398,23 +413,328 @@ fun JobDetailScreen(
                     )
                 }
 
-                Box(
-                    modifier = Modifier
-                        .weight(1.2f)
-                        .clip(RoundedCornerShape(999.dp))
-                        .background(Color(0xFF6366F1))
-                        .padding(vertical = 10.dp)
-                        .clickable { viewModel.takeJob() },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "Ambil job ini",
-                        color = Color.White,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 14.sp
-                    )
+                // Button based on status
+                when {
+                    uiState.isJobCompleted -> {
+                        Box(
+                            modifier = Modifier
+                                .weight(1.2f)
+                                .clip(RoundedCornerShape(999.dp))
+                                .background(Color(0xFF22C55E))
+                                .padding(vertical = 10.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "✓ Selesai",
+                                color = Color.White,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 14.sp
+                            )
+                        }
+                    }
+                    uiState.isWaitingConfirmation -> {
+                        Column(
+                            modifier = Modifier.weight(1.2f),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(999.dp))
+                                    .background(Color(0xFFF59E0B))
+                                    .padding(vertical = 10.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "⏳ Menunggu Konfirmasi",
+                                    color = Color.White,
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 13.sp
+                                )
+                            }
+                            // Simulate confirmation button (for demo)
+                            TextButton(
+                                onClick = { viewModel.simulateRequesterConfirmation() },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(
+                                    text = "[Demo] Simulasi Konfirmasi Pemberi Job",
+                                    fontSize = 11.sp,
+                                    color = Color(0xFF6366F1)
+                                )
+                            }
+                        }
+                    }
+                    uiState.status == "Ongoing" -> {
+                        Box(
+                            modifier = Modifier
+                                .weight(1.2f)
+                                .clip(RoundedCornerShape(999.dp))
+                                .background(Color(0xFFEF4444))
+                                .padding(vertical = 10.dp)
+                                .clickable { viewModel.showCompleteDialog() },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (uiState.isMarkingComplete) {
+                                CircularProgressIndicator(
+                                    color = Color.White,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            } else {
+                                Text(
+                                    text = "Selesai Dikerjakan",
+                                    color = Color.White,
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 14.sp
+                                )
+                            }
+                        }
+                    }
+                    else -> {
+                        Box(
+                            modifier = Modifier
+                                .weight(1.2f)
+                                .clip(RoundedCornerShape(999.dp))
+                                .background(Color(0xFF6366F1))
+                                .padding(vertical = 10.dp)
+                                .clickable { viewModel.showTakeJobDialog() },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (uiState.isTakingJob) {
+                                CircularProgressIndicator(
+                                    color = Color.White,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            } else {
+                                Text(
+                                    text = "Ambil job ini",
+                                    color = Color.White,
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 14.sp
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
+        
+        // Dialogs
+        if (uiState.showConfirmDialog) {
+            ConfirmTakeJobDialog(
+                jobTitle = uiState.title,
+                price = uiState.price,
+                onConfirm = { viewModel.confirmTakeJob() },
+                onDismiss = { viewModel.dismissDialogs() }
+            )
+        }
+        
+        if (uiState.showCompleteDialog) {
+            MarkCompleteDialog(
+                onConfirm = { viewModel.markAsComplete() },
+                onDismiss = { viewModel.dismissDialogs() }
+            )
+        }
+        
+        if (uiState.showRatingDialog) {
+            RatingDialog(
+                rating = uiState.userRating,
+                review = uiState.userReview,
+                onRatingChange = { viewModel.setRating(it) },
+                onReviewChange = { viewModel.setReview(it) },
+                onSubmit = { viewModel.submitRating() },
+                onDismiss = { viewModel.dismissDialogs() }
+            )
+        }
     }
+    }
+}
+
+// Dialog Components
+@Composable
+private fun ConfirmTakeJobDialog(
+    jobTitle: String,
+    price: String,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = "Ambil Job Ini?",
+                fontWeight = FontWeight.Bold
+            )
+        },
+        text = {
+            Column {
+                Text("Job: $jobTitle")
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "Upah: $price",
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color(0xFF6366F1)
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    "Pastikan kamu bisa menyelesaikan job ini ya!",
+                    fontSize = 13.sp,
+                    color = Color(0xFF6B7280)
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = onConfirm,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF6366F1)
+                )
+            ) {
+                Text("Ya, Ambil")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Batal")
+            }
+        }
+    )
+}
+
+@Composable
+private fun MarkCompleteDialog(
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = "Sudah Selesai Dikerjakan?",
+                fontWeight = FontWeight.Bold
+            )
+        },
+        text = {
+            Column {
+                Text(
+                    "Apakah kamu sudah menyelesaikan pekerjaan ini?",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = Color(0xFFFEF3C7)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "ℹ️",
+                            fontSize = 16.sp
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            "Pemberi job akan mengkonfirmasi sebelum job dianggap selesai.",
+                            fontSize = 12.sp,
+                            color = Color(0xFF92400E),
+                            lineHeight = 16.sp
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = onConfirm,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFFEF4444)
+                )
+            ) {
+                Text("Submit")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Belum")
+            }
+        }
+    )
+}
+
+@Composable
+private fun RatingDialog(
+    rating: Int,
+    review: String,
+    onRatingChange: (Int) -> Unit,
+    onReviewChange: (String) -> Unit,
+    onSubmit: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = "Berikan Rating",
+                fontWeight = FontWeight.Bold
+            )
+        },
+        text = {
+            Column {
+                Text(
+                    "Bagaimana pengalamanmu?",
+                    fontSize = 14.sp,
+                    color = Color(0xFF6B7280)
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                
+                // Star Rating
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    repeat(5) { index ->
+                        Icon(
+                            imageVector = Icons.Filled.Star,
+                            contentDescription = null,
+                            tint = if (index < rating) Color(0xFFFBBF24) else Color(0xFFD1D5DB),
+                            modifier = Modifier
+                                .size(32.dp)
+                                .clickable { onRatingChange(index + 1) }
+                        )
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(12.dp))
+                
+                // Review Text
+                OutlinedTextField(
+                    value = review,
+                    onValueChange = onReviewChange,
+                    placeholder = { Text("Tulis review (opsional)", fontSize = 13.sp) },
+                    modifier = Modifier.fillMaxWidth(),
+                    maxLines = 3,
+                    shape = RoundedCornerShape(12.dp)
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = onSubmit,
+                enabled = rating > 0,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF6366F1)
+                )
+            ) {
+                Text("Kirim")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Lewati")
+            }
+        }
+    )
 }

@@ -10,6 +10,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.tetanggaku.presentation.screens.*
+import com.example.tetanggaku.presentation.viewmodels.NotificationType
 import com.example.tetanggaku.ui.theme.TetanggakuTheme
 
 // -------------------------
@@ -31,6 +32,11 @@ sealed class Screen(val route: String) {
     }
     object Notifications : Screen("notifications")
     object LocationPicker : Screen("location_picker")
+    object AiChat : Screen("ai_chat")
+    object MyPostedJobs : Screen("my_posted_jobs")
+    object HelperProfile : Screen("helper_profile/{helperId}") {
+        fun createRoute(helperId: String) = "helper_profile/$helperId"
+    }
 }
 
 class MainActivity : ComponentActivity() {
@@ -128,6 +134,9 @@ fun TetanggakuApp() {
                 },
                 onCategoryClick = { categoryId ->
                     navController.navigate(Screen.CategoryDetail.createRoute(categoryId))
+                },
+                onAiClick = {
+                    navController.navigate(Screen.AiChat.route)
                 }
             )
         }
@@ -166,6 +175,9 @@ fun TetanggakuApp() {
                     navController.navigate(Screen.Login.route) {
                         popUpTo(Screen.Home.route) { inclusive = true }
                     }
+                },
+                onMyPostedJobsClick = {
+                    navController.navigate(Screen.MyPostedJobs.route)
                 }
             )
         }
@@ -294,21 +306,22 @@ fun TetanggakuApp() {
         // Notifications
         // =======================
         composable(route = Screen.Notifications.route) {
-            NotificationsScreen(
+            NotificationScreen(
                 onBack = { navController.popBackStack() },
-                onHomeClick = {
-                    navController.navigate(Screen.Home.route) {
-                        popUpTo(Screen.Home.route) { inclusive = true }
+                onNotificationClick = { notification ->
+                    // Handle notification click based on type
+                    when (notification.type) {
+                        NotificationType.JOB_COMPLETED -> {
+                            navController.navigate(Screen.MyPostedJobs.route)
+                        }
+                        NotificationType.APPLICANT_NEW -> {
+                            navController.navigate(Screen.MyPostedJobs.route)
+                        }
+                        NotificationType.CHAT_MESSAGE -> {
+                            navController.navigate(Screen.Chat.route)
+                        }
+                        else -> {}
                     }
-                },
-                onJobsClick = {
-                    navController.navigate(Screen.Home.route)
-                },
-                onChatClick = {
-                    navController.navigate(Screen.Chat.route)
-                },
-                onProfileClick = {
-                    navController.navigate(Screen.Profile.route)
                 }
             )
         }
@@ -322,6 +335,44 @@ fun TetanggakuApp() {
                 onLocationSelected = { location ->
                     // TODO: Update location in HomeViewModel
                     navController.popBackStack()
+                }
+            )
+        }
+        
+        // =======================
+        // AI Chat
+        // =======================
+        composable(route = Screen.AiChat.route) {
+            AiChatScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
+        
+        // =======================
+        // My Posted Jobs (Requester)
+        // =======================
+        composable(route = Screen.MyPostedJobs.route) {
+            MyPostedJobsScreen(
+                onBack = { navController.popBackStack() },
+                onJobClick = { jobId ->
+                    navController.navigate(Screen.JobDetail.route)
+                },
+                onHelperClick = { helperId ->
+                    navController.navigate(Screen.HelperProfile.createRoute(helperId))
+                }
+            )
+        }
+        
+        // =======================
+        // Helper Profile
+        // =======================
+        composable(route = Screen.HelperProfile.route) { backStackEntry ->
+            val helperId = backStackEntry.arguments?.getString("helperId") ?: "1"
+            HelperProfileScreen(
+                helperId = helperId,
+                onBack = { navController.popBackStack() },
+                onContactClick = {
+                    navController.navigate(Screen.Chat.route)
                 }
             )
         }

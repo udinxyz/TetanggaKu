@@ -13,7 +13,11 @@ enum class NotificationType {
     GENERAL,
     JOB_UPDATE,
     CHAT_MESSAGE,
-    SYSTEM
+    SYSTEM,
+    JOB_TAKEN,          // Helper mengambil job requester
+    JOB_COMPLETED,      // Helper submit completion
+    JOB_CANCELLED,      // Job dibatalkan
+    APPLICANT_NEW       // Ada applicant baru
 }
 
 data class NotificationUiState(

@@ -19,6 +19,17 @@ class HomeViewModel : ViewModel() {
         loadAvailableJobs()
         loadMyJobs()
         loadNotificationCount()
+        loadDailyMissions()
+    }
+
+    private fun loadDailyMissions() {
+        // Sample Daily Missions
+        val missions = listOf(
+            DailyMission("1", "Login hari ini", 10, true),
+            DailyMission("2", "Lihat 3 job baru", 20, false),
+            DailyMission("3", "Bantu 1 tetangga", 50, false)
+        )
+        _uiState.update { it.copy(dailyMissions = missions) }
     }
     
     private fun loadServiceCategories() {
